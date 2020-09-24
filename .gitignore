@@ -1,0 +1,20 @@
+target/
+**/*.rs.bk
+.idea
+node_modules/
+.cache
+client/dist
+
+# MacOS misc file
+*.DS_Store
+
+# Wasm files
+*.wasm
+*.wat
+
+# REPL history files
+*.repl_history
+
+# Allowed Wasm files for examples
+!/artifacts/*.wasm
+
