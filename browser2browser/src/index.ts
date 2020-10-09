@@ -20,6 +20,22 @@ let relays: Relay[] = [
     {
         multiaddr: "/ip4/134.209.186.43/tcp/9003/ws/p2p/12D3KooWBUJifCTgaxAUrcM9JysqCcS4CS8tiYH5hExbdWCAoNwb",
         peerId: "12D3KooWBUJifCTgaxAUrcM9JysqCcS4CS8tiYH5hExbdWCAoNwb"
+    },
+    {
+        multiaddr: "/ip4/134.209.186.43/tcp/9004/ws/p2p/12D3KooWJbJFaZ3k5sNd8DjQgg3aERoKtBAnirEvPV8yp76kEXHB",
+        peerId: "12D3KooWJbJFaZ3k5sNd8DjQgg3aERoKtBAnirEvPV8yp76kEXHB"
+    },
+    {
+        multiaddr: "/ip4/134.209.186.43/tcp/9005/ws/p2p/12D3KooWCKCeqLPSgMnDjyFsJuWqREDtKNHx1JEBiwaMXhCLNTRb",
+        peerId: "12D3KooWCKCeqLPSgMnDjyFsJuWqREDtKNHx1JEBiwaMXhCLNTRb"
+    },
+    {
+        multiaddr: "/ip4/134.209.186.43/tcp/9990/ws/p2p/12D3KooWMhVpgfQxBLkQkJed8VFNvgN4iE6MD7xCybb1ZYWW2Gtz",
+        peerId: "12D3KooWMhVpgfQxBLkQkJed8VFNvgN4iE6MD7xCybb1ZYWW2Gtz"
+    },
+    {
+        multiaddr: "/ip4/134.209.186.43/tcp/9100/ws/p2p/12D3KooWPnLxnY71JDxvB3zbjKu9k1BCYNthGZw6iGrLYsR1RnWM",
+        peerId: "12D3KooWPnLxnY71JDxvB3zbjKu9k1BCYNthGZw6iGrLYsR1RnWM"
     }
 ]
 
@@ -41,14 +57,16 @@ window.init = init;
 export class AquaClient {
 
     client: FluenceClient;
+    name: string
 
-    constructor(client: FluenceClient) {
+    constructor(name: string, client: FluenceClient) {
         this.client = client;
+        this.name = name;
     }
 
-    async sendMessage(pid: string, name: string, message: string) {
+    async sendMessage(pid: string, message: string) {
         let script = `(call (${pid} (chat show_message) (name message) result))`
-        let particle = await build(this.client.selfPeerId, script, {name, message})
+        let particle = await build(this.client.selfPeerId, script, {name: this.name, message})
         this.client.sendParticle(particle);
     }
 
@@ -58,7 +76,7 @@ export class AquaClient {
     }
 }
 
-async function init(relay: Relay, seed?: string): Promise<AquaClient> {
+async function init(relay: Relay, name: string, seed?: string): Promise<AquaClient> {
     let pid;
     if (seed) {
         pid = await seedToPeerId(seed);
@@ -79,7 +97,7 @@ async function init(relay: Relay, seed?: string): Promise<AquaClient> {
 
     registerService(service);
 
-    return new AquaClient(client)
+    return new AquaClient(name, client)
 }
 
 
