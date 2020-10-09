@@ -76,7 +76,7 @@ export class AquaClient {
     }
 }
 
-async function init(relay: Relay, name: string, seed?: string): Promise<AquaClient> {
+async function init(relay: number, name: string, seed?: string): Promise<AquaClient> {
     let pid;
     if (seed) {
         pid = await seedToPeerId(seed);
@@ -87,7 +87,7 @@ async function init(relay: Relay, name: string, seed?: string): Promise<AquaClie
     console.log("PID: " + pid.toB58String())
 
     Fluence.setLogLevel('silent')
-    let client = await Fluence.connect(relay.multiaddr, pid);
+    let client = await Fluence.connect(relays[relay].multiaddr, pid);
 
     let service: Service = new Service("chat")
     service.registerFunction("show_message", (args: any[]) => {
