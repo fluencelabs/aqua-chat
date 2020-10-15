@@ -5,7 +5,7 @@ import {getSignature} from "fluence/dist/address";
 import {FluenceChat, HISTORY, Member, MODULE_CHAT, USER_ADDED, USER_LIST} from "./fluenceChat";
 
 // change these constants in different environment
-const CHAT_BLUEPRINT = "cc5587c8-2d14-4e47-96f8-c3159b0c7206";
+const CHAT_BLUEPRINT = "75c809a5-4ccb-4491-8555-27ec34c5829c";
 const CHAT_PEER_ID = "12D3KooWQ8x4SMBmSSUrMzY2m13uzC7UoSyvHaDhTKx7hH8aXxpt"
 
 // parameters from `fluence-playground` local network
@@ -154,6 +154,7 @@ declare global {
         createChat: any;
         scenario: any;
         connectToChat: any;
+        publishBlueprint: any;
     }
 }
 
@@ -161,6 +162,7 @@ window.joinChat = joinChat;
 window.createChat = createChat;
 window.scenario = scenario;
 window.connectToChat = connectToChat;
+window.publishBlueprint = publishBlueprint;
 // Fluence.setLogLevel('trace')
 
 async function connect(relayAddress: string, seed?: string): Promise<FluenceClient> {

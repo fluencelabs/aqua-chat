@@ -1,52 +1,26 @@
+
 const path = require('path');
 const webpack = require('webpack');
-const { CleanWebpackPlugin } = require('clean-webpack-plugin');
-var HtmlWebpackPlugin = require('html-webpack-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin')
 
-const production = (process.env.NODE_ENV === 'production');
-
-const config = {
+module.exports = {
     entry: {
-        app: ['./src/index.ts']
+        app: ['./index.js']
     },
-    module: {
-        rules: [
-            {
-                test: /\.tsx?$/,
-                loader: 'ts-loader',
-                exclude: /node_modules/
-            }
-        ]
+    devServer: {
+        contentBase: './bundle',
+        hot: true
     },
-    resolve: {
-        extensions: [ '.tsx', '.ts', '.js']
-    },
+    mode: "development",
     output: {
         filename: 'bundle.js',
-        path: path.resolve(__dirname, 'bundle'),
-    },
-    node: {
-        fs: 'empty'
+        path: path.resolve(__dirname, 'bundle')
     },
     plugins: [
-        new CleanWebpackPlugin(),
-        new HtmlWebpackPlugin()
+        new CopyWebpackPlugin([{
+            from: './*.html'
+        }]),
+        new webpack.HotModuleReplacementPlugin()
     ]
 };
 
-if (production) {
-    config.mode = 'production';
-} else {
-    config.mode = 'development';
-    config.devtool = 'inline-source-map';
-    config.devServer = {
-        contentBase: './bundle',
-        hot: false
-    };
-    config.plugins = [
-        ...config.plugins,
-        new webpack.HotModuleReplacementPlugin()
-    ];
-}
-
-module.exports = config;

@@ -4,6 +4,9 @@ import {FluenceClient} from "fluence/dist/src/fluenceClient";
 import {Service} from "fluence/dist/src/callService";
 import {build} from "fluence/dist/src/particle";
 import {registerService} from "fluence/dist/src/globalState";
+import {SQLITE} from "../../artifacts/sqlite.ts";
+import {USER_LIST} from "../../artifacts/userList.ts";
+import {HISTORY} from "../../artifacts/history.ts";
 
 type Relay = { peerId: string; multiaddr: string };
 
@@ -47,12 +50,24 @@ declare global {
     interface Window {
         relays: Relay[]
         init: any
+        addModules: any
+        addBlueprint: any
+        createService: any
+        getModules: any
     }
 }
 
+const BP_ID = "d9078816-7519-4bcd-8481-0729231299c5";
+const SERVICE_ID = "a0a94037-59bb-4f63-949c-a57068389c98"
+
+
 window.relays = relays;
+window.addModules = addModules;
+window.addBlueprint = addBlueprint;
+window.createService = createService;
+window.getModules = getModules;
 window.init = init;
-// Fluence.setLogLevel('trace')
+Fluence.setLogLevel('trace')
 
 export class AquaClient {
 
@@ -71,9 +86,74 @@ export class AquaClient {
     }
 
     async sendScript(script: string, data: object) {
-        let particle = await build(this.client.selfPeerId, script, data)
+        let particle = await build(this.client.selfPeerId, script, data, 500000)
         this.client.sendParticle(particle);
     }
+}
+
+/*
+        (seq (
+            (call (%current_peer_id% (add_module ||) (module_bytes module_config) module))
+            (seq (
+                (call (%current_peer_id% (add_blueprint ||) (blueprint) blueprint_id))
+                (seq (
+                    (call (%current_peer_id% (create ||) (blueprint_id) service_id))
+                    (call ({} (|| ||) (service_id) client_result))
+                ))
+            ))
+        ))
+
+
+        (seq (
+            (call (%current_peer_id% ({} |greeting|) (my_name) greeting))
+            (call ({} (|| ||) (greeting) client_result))
+        ))
+ */
+
+/*
+{"module_bytes":"base64","module_config":{"name":"greeting","mem_pages_count":100,"logger_enabled":true,"wasi":{"envs":{},"preopened_files":["/tmp"],"mapped_dirs":{}}}}
+ */
+
+async function getModules() {
+    let pid = await Fluence.generatePeerId();
+    let client = await Fluence.connect(relays[1].multiaddr, pid);
+
+    let script = `(seq (
+            ${client.nodeIdentityCall()}
+            (seq (           
+                (call ("${client.connection.nodePeerId.toB58String()}" ("get_available_modules" "") () modules))
+                (call ("${client.selfPeerIdStr}" ("ababa" "") (modules aza) void1))
+            ))
+        ))
+        `
+
+    console.log(script)
+
+    let particle = await build(client.selfPeerId, script, {aza: "df"})
+    await client.sendParticle(particle)
+}
+
+async function addBlueprint() {
+    let pid = await Fluence.generatePeerId();
+    let client = await Fluence.connect(relays[1].multiaddr, pid);
+    let bp_id = await client.addBlueprint("chat", ["sqlite", "history", "user-list"])
+    console.log(bp_id)
+}
+
+async function createService() {
+    let pid = await Fluence.generatePeerId();
+    let client = await Fluence.connect(relays[1].multiaddr, pid);
+    let cs = await client.createService(BP_ID)
+    console.log(cs)
+}
+
+async function addModules() {
+    let pid = await Fluence.generatePeerId();
+    Fluence.setLogLevel("debug")
+    let client = await Fluence.connect(relays[1].multiaddr, pid);
+    // await client.addModule("sqlite", SQLITE, 20000)
+    await client.addModule("user-list", USER_LIST)
+    await client.addModule("history", HISTORY)
 }
 
 async function init(relay: number, name: string, seed?: string): Promise<AquaClient> {
