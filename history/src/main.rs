@@ -18,7 +18,7 @@ mod storage;
 
 use fluence::fce;
 use fluence::WasmLogger;
-use crate::storage::{add_msg, init, get_all_msgs, get_msg};
+use crate::storage::{add_msg, init, get_all_msgs, get_msg, Message};
 
 const OWNER: &str = "OWNER";
 
@@ -33,7 +33,7 @@ fn add(author: String, msg: String) -> String {
 }
 
 #[fce]
-fn get_all() -> String {
+fn get_all() -> Vec<Message> {
     get_all_msgs()
 }
 

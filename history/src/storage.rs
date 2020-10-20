@@ -16,6 +16,13 @@
 
 use fluence::fce;
 
+#[fce]
+pub struct Message {
+    pub id: u32,
+    pub author: String,
+    pub body: String,
+}
+
 pub fn init() {
     unsafe {
         invoke("CREATE TABLE IF NOT EXISTS history(msg_id INTEGER PRIMARY KEY, msg TEXT NOT NULL, author TEXT NOT NULL);".to_string());
@@ -40,8 +47,28 @@ pub fn get_msg(limit: u64) -> String {
     }
 }
 
-pub fn get_all_msgs() -> String {
-    unsafe { invoke(format!("SELECT * FROM history;")) }
+pub fn get_all_msgs() -> Vec<Message> {
+    let msgs = unsafe { invoke(format!("SELECT * FROM history;")) };
+    msgs.split("|").filter_map(|msg| {
+        let mut columns = msg.split(",");
+        let mut next = |field| columns.next().map(|s| s.to_string()).or_else(|| {
+            log::warn!("message {} is corrupted, missing field {}", msg, field);
+            None
+        });
+        let id = next("id")?;
+        let id = match id.parse::<u32>() {
+            Ok(id) => id,
+            Err(err) => {
+                log::warn!("message.id isn't a number {}: {:?}", id, err);
+                u32::max_value()
+            }
+        };
+        Some(Message {
+            id,
+            author: next("author")?,
+            body: next("body")?
+        })
+    }).collect()
 }
 
 #[fce]
