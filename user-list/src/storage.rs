@@ -75,5 +75,4 @@ pub fn delete_user(user: &str) -> String {
 extern "C" {
     #[link_name = "invoke"]
     pub fn invoke(cmd: String) -> String;
-
 }

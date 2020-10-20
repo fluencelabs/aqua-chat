@@ -24,6 +24,14 @@ use crate::storage::{
 
 const OWNER: &str = "owner_id";
 
+#[fce]
+struct User {
+    pub client_id: String,
+    pub relay: String,
+    pub sig: String,
+    pub name: String,
+}
+
 pub fn main() {
     WasmLogger::init_with_level(log::Level::Info).unwrap();
     init();
@@ -35,8 +43,22 @@ fn join(user: String, relay: String, sig: String, name: String) -> String {
 }
 
 #[fce]
-fn get_users() -> String {
-    get_all_users()
+fn get_users() -> Vec<User> {
+    get_all_users().split("|").filter_map(|user| {
+        let mut columns = user.split(",");
+        let mut next = |field| columns.next().map(|s| s.to_string()).or_else(|| {
+            log::warn!("user {} is corrupted, missing field {}", user, field);
+            None
+        });
+        let user = User {
+            client_id: next("client_id")?,
+            relay: next("relay")?,
+            sig: next("sig")?,
+            name: next("name")?,
+        };
+
+        Some(user)
+    }).collect()
 }
 
 #[fce]
