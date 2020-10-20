@@ -8,8 +8,8 @@ export const USER_ADDED = "USER_ADDED"
 const USER_DELETED = "USER_DELETED"
 const MESSAGE = "MESSAGE"
 export const MODULE_CHAT = "CHAT"
-export const HISTORY = "history"
-export const USER_LIST = "user-list"
+export const HISTORY_NAME = "history"
+export const USER_LIST_NAME = "user-list"
 
 export interface Member {
     clientId: string,
@@ -29,7 +29,7 @@ export class FluenceChat {
     chatPeerId: string
     members: Member[]
 
-    constructor(client: FluenceClient, historyServiceId: string, userListServiceId: string, peerId: string, name: string, relay: string, members: Member[]) {
+    constructor(client: FluenceClient, chatId: string, historyServiceId: string, userListServiceId: string, peerId: string, name: string, relay: string, members: Member[]) {
         this.client = client;
         this.name = name;
         this.historyServiceId = historyServiceId;
@@ -37,16 +37,16 @@ export class FluenceChat {
         this.members = members.filter(m => m.clientId !== this.client.selfPeerIdStr);
         this.relay = relay;
         this.chatPeerId = peerId;
-        this.chatId = "chat_" + historyServiceId;
+        this.chatId = chatId;
 
         let service = new Service(this.chatId)
-        service.registerFunction("user_added", (args: any[]) => {
-            let m = args[0];
+        service.registerFunction("join", (args: any[]) => {
+            let m = args;
             let member = {
-                clientId: m.clientId,
-                relay: m.relay,
-                sig: m.sig,
-                name: m.name
+                clientId: m[0],
+                relay: m[1],
+                sig: m[2],
+                name: m[3]
             }
             console.log(`Member added to ${this.name}: ` + JSON.stringify(member))
             this.addMember(member);
