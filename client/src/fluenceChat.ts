@@ -104,7 +104,7 @@ export class FluenceChat {
         let script = `
         
         `
-        await this.client.callService(this.chatPeerId, this.serviceId, USER_LIST, [clientId, name, clientId], "change_name")
+        // await this.client.callService(this.chatPeerId, this.serviceId, USER_LIST, [clientId, name, clientId], "change_name")
         await this.sendToAll({clientId: clientId, name: name}, NAME_CHANGED)
     }
 
@@ -115,7 +115,7 @@ export class FluenceChat {
         let clientId = this.client.selfPeerIdStr;
         let relay = this.client.connection.nodePeerId.toB58String();
         let sig = this.client.selfPeerIdStr
-        await this.client.callService(this.chatPeerId, this.serviceId, USER_LIST, [clientId, relay, sig, clientId], "change_relay")
+        // await this.client.callService(this.chatPeerId, this.serviceId, USER_LIST, [clientId, relay, sig, clientId], "change_relay")
         await this.sendToAll({clientId: clientId, relay: relay, sig: sig}, RELAY_CHANGED)
     }
 
@@ -140,23 +140,23 @@ export class FluenceChat {
     }
 
     async deleteUser(user: string) {
-        await this.client.callService(this.chatPeerId, this.serviceId, USER_LIST, [user, user], "delete")
+        // await this.client.callService(this.chatPeerId, this.serviceId, USER_LIST, [user, user], "delete")
         this.deleteMember(user)
     }
 
     async getHistory(): Promise<any> {
-        return await this.client.callService(this.chatPeerId, this.serviceId, HISTORY, [], "get_all")
+        // return await this.client.callService(this.chatPeerId, this.serviceId, HISTORY, [], "get_all")
     }
 
     private async sendToAll(args: any, fname: string) {
         for (const member of this.members) {
             console.log(`send command '${fname}' to: ` + JSON.stringify(member))
-            await this.client.fireClient(member.relay, member.clientId, member.sig, MODULE_CHAT, args, fname)
+            // await this.client.fireClient(member.relay, member.clientId, member.sig, MODULE_CHAT, args, fname)
         }
     }
 
     async sendMessage(msg: string) {
-        await this.client.callService(this.chatPeerId, this.serviceId, HISTORY, [this.client.selfPeerIdStr, msg], "add")
+        // await this.client.callService(this.chatPeerId, this.serviceId, HISTORY, [this.client.selfPeerIdStr, msg], "add")
         await this.sendToAll({
             clientId: this.client.selfPeerIdStr,
             message: msg

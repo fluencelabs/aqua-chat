@@ -26,10 +26,6 @@ let relays = [
 
 const CHAT_PEER_ID = relays[1].peerId
 
-function scriptJoin(chatId: string, chatPeerId: string): string {
-    return script(chatId, chatPeerId, "join", ["peerId", "relay", "sig", "name"])
-}
-
 function scriptGetChatPeer(): string {
     return ""
 }
@@ -54,7 +50,7 @@ function getMembersScript(chatPeerId: string, userListId: string, relay: string,
     return `(seq (
         (call ("${chatPeerId}" ("identity" "") () void[]))       
         (seq (
-            (call ("${chatPeerId}" ("${userListId}" "get_members") (chat_id) members[]))
+            (call ("${chatPeerId}" ("${userListId}" "get_members") () members[]))
             (seq (
                 (call ("${relay}" ("identity" "") () void[]))
                 (call ("${client}" ("members" "") (members) void[]))
@@ -70,9 +66,9 @@ function genScript(chatId: string, serviceId: string, userListId: string, funcNa
     (seq (
         (call ("${chatPeerId}" ("identity" "") () void[]))
         (seq (
-            ( call ("${chatPeerId}" ("${serviceId}" "${funcName}") (${argsStr}) result )
+            (call ("${chatPeerId}" ("${serviceId}" "${funcName}") (${argsStr}) result )
             (seq (
-                (call ("${chatPeerId}" ("${userListId}" "get_members") (chat_id) members[]))
+                (call ("${chatPeerId}" ("${userListId}" "get_members") () members[]))
                 (fold (members m
                     (seq (
                         (seq (
@@ -94,19 +90,25 @@ async function createChat(name: string, relay: string, relayAddress: string, see
     let historyServiceId = await clCreation.createService(HISTORY_BLUEPRINT);
 
     let chatId = Math.random().toString(36).substring(7);
-    await clCreation.addProvider(Buffer.from(chatId + "_history", 'utf8'), relays[1].peerId, historyServiceId);
-    await clCreation.addProvider(Buffer.from(chatId + "_userlist", 'utf8'), relays[1].peerId, userListServiceId);
+    await clCreation.addProvider(Buffer.from(chatIdToUserListId(chatId), 'utf8'), relays[1].peerId, historyServiceId);
+    await clCreation.addProvider(Buffer.from(chatIdToUserListId(chatId), 'utf8'), relays[1].peerId, userListServiceId);
 
     console.log("CHAT ID: " + chatId);
 
     let cl = await connect(relayAddress, seed);
 
+    let script = genScript(chatId, userListServiceId, userListServiceId, "join", ["user", "relay", "sig", "name"])
+    let particle = await build(cl.selfPeerId, script, {user: cl.selfPeerIdStr, relay: cl.connection.nodePeerId.toB58String, sig: cl.selfPeerIdStr, name: name})
+    await cl.sendParticle(particle)
+
+    let members = getMembers(cl, userListServiceId);
+
     return new FluenceChat(cl, historyServiceId, userListServiceId, CHAT_PEER_ID, name, relay,[]);
 }
 
-async function connectToChat(chatId: string, relay: string, relayAddress: string, seed: string): Promise<FluenceChat> {
+/*async function connectToChat(chatId: string, relay: string, relayAddress: string, seed: string): Promise<FluenceChat> {
     let cl = await connect(relayAddress, seed);
-}
+}*/
 
 async function joinChat(name: string, chatId: string, relay: string, relayAddress: string, seed?: string): Promise<FluenceChat> {
     let clInfo = await connect(relays[1].multiaddr);
@@ -116,36 +118,28 @@ async function joinChat(name: string, chatId: string, relay: string, relayAddres
 
     let cl = await connect(relayAddress, seed);
 
-    let script = genScript(chatId, chatIdToUserListId(chatId), userListId, "join", ["user", "relay", "sig", "name"])
-
+    let script = genScript(chatId, userListId, userListId, "join", ["user", "relay", "sig", "name"])
     let particle = await build(cl.selfPeerId, script, {user: cl.selfPeerIdStr, relay: cl.connection.nodePeerId.toB58String, sig: cl.selfPeerIdStr, name: name})
     await cl.sendParticle(particle)
+
+    let members = getMembers(cl, userListId);
 
     return new FluenceChat(cl, historyId, userListId, CHAT_PEER_ID, name, relay,[]);
 }
 
-async function getMembers(client: FluenceClient, chatId: string): Promise<Member[]> {
-    let membersStr = (await client.callService(CHAT_PEER_ID, chatId, USER_LIST, {}, "get_users")).result as string
-    let members: Member[] = []
-    let membersRaw = membersStr.split("|")
-    membersRaw.forEach((v) => {
-        let memberRaw = v.split(",")
-        let member: Member = {
-            clientId: memberRaw[1],
-            relay: memberRaw[2],
-            sig: memberRaw[3],
-            name: memberRaw[4]
-        }
-        members.push(member);
-    })
-    return members;
+async function getMembers(client: FluenceClient, userListId: string): Promise<any> {
+    let getMembersScr = getMembersScript(CHAT_PEER_ID, userListId, client.connection.nodePeerId.toB58String(), client.selfPeerIdStr)
+    let particleGetMembers = await build(client.selfPeerId, getMembersScr, {})
+    let members = await client.sendParticle(particleGetMembers)
+    console.log(members)
+    return members
 }
 
 function delay(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function scenario() {
+/*async function scenario() {
     console.log("start")
     let creator = await createChat("Alice", relays[1].peerId, relays[1].multiaddr)
     console.log("chat created")
@@ -183,7 +177,7 @@ async function scenario() {
     console.log("history user: " + JSON.stringify(h2))
     let members = await getMembers(user.client, user.serviceId)
     console.log("members: " + JSON.stringify(members))
-}
+}*/
 
 declare global {
     interface Window {
@@ -197,8 +191,8 @@ declare global {
 
 window.joinChat = joinChat;
 window.createChat = createChat;
-window.scenario = scenario;
-window.connectToChat = connectToChat;
+// window.scenario = scenario;
+// window.connectToChat = connectToChat;
 window.publishBlueprint = publishBlueprint;
 // Fluence.setLogLevel('trace')
 
