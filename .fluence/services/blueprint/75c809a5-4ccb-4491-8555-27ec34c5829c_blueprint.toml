@@ -1,0 +1,3 @@
+name = "chat"
+id = "75c809a5-4ccb-4491-8555-27ec34c5829c"
+dependencies = ["sqlite", "history", "user-list"]
