@@ -18,3 +18,4 @@ client/dist
 # Allowed Wasm files for examples
 !/artifacts/*.wasm
 
+artifacts/*.ts

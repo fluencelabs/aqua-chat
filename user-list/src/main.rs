@@ -46,7 +46,8 @@ fn join(user: String, relay: String, sig: String, name: String) -> String {
 fn get_users() -> Vec<User> {
     get_all_users().split("|").filter_map(|user| {
         let mut columns = user.split(",");
-        let mut next = |field| columns.next().map(|s| s.to_string()).or_else(|| {
+        columns.next();
+        let mut next = |field| columns.next().map(|s| s.trim().to_string()).or_else(|| {
             log::warn!("user {} is corrupted, missing field {}", user, field);
             None
         });
