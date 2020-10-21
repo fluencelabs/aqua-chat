@@ -44,11 +44,11 @@ pub fn update_name(user: String, name: String) -> String {
     }
 }
 
-pub fn update_relay(user: String, relay: String, sig: String) -> String {
+pub fn update_relay(user: String, relay: String, signature: String) -> String {
     unsafe {
         invoke(format!(
             "UPDATE users SET relay = '{}', sig = '{}' WHERE user = '{}'",
-            relay, sig, user
+            relay, signature, user
         ))
     }
 }
@@ -57,11 +57,11 @@ pub fn get_all_users() -> String {
     unsafe { invoke(format!("SELECT * FROM users")) }
 }
 
-pub fn add_user(user: String, relay: String, sig: String, name: String) -> String {
+pub fn add_user(user: String, relay: String, signature: String, name: String) -> String {
     unsafe {
         invoke(format!(
             "INSERT INTO users (user,relay,sig,name) VALUES ('{}','{}','{}','{}')",
-            user, relay, sig, name
+            user, relay, signature, name
         ))
     }
 }
