@@ -1,17 +1,17 @@
 #!/bin/sh
 
-cd user-list
-cargo update
-fce build --release
-cd ../history
-cargo update
-fce build --release
+#cd user-list
+#cargo update
+#fce build --release
+#cd ../history
+#cargo update
+#fce build --release
 
-cd ..
-rm -f artifacts/user-list.wasm
-rm -f artifacts/history.wasm
-cp user-list/target/wasm32-wasi/release/user-list.wasm artifacts/
-cp history/target/wasm32-wasi/release/history.wasm artifacts/
+#cd ..
+#rm -f artifacts/user-list.wasm
+#rm -f artifacts/history.wasm
+#cp user-list/target/wasm32-wasi/release/user-list.wasm artifacts/
+#cp history/target/wasm32-wasi/release/history.wasm artifacts/
 
 cd artifacts
 base64 -w 0 user-list.wasm > userList.ts && sed -i '1s/^/export const USER_LIST=\"/' userList.ts && echo '"' >> userList.ts
