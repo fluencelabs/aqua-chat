@@ -1,13 +1,9 @@
 import {FluenceClient} from "fluence/dist/src/fluenceClient";
 import {registerService} from "fluence/dist/src/globalState";
 import {Service} from "fluence/dist/src/callService";
+import {build} from "fluence/dist/src/particle";
+import {CHAT_PEER_ID} from "./index.ts";
 
-const NAME_CHANGED = "NAME_CHANGED"
-const RELAY_CHANGED = "RELAY_CHANGED"
-export const USER_ADDED = "USER_ADDED"
-const USER_DELETED = "USER_DELETED"
-const MESSAGE = "MESSAGE"
-export const MODULE_CHAT = "CHAT"
 export const HISTORY_NAME = "history"
 export const USER_LIST_NAME = "user-list"
 
@@ -21,39 +17,43 @@ export interface Member {
 export class FluenceChat {
 
     client: FluenceClient
-    historyServiceId: string
-    userListServiceId: string
+    historyId: string
+    userListId: string
     chatId: string
     name: string
     relay: string
     chatPeerId: string
     members: Member[]
 
-    constructor(client: FluenceClient, chatId: string, historyServiceId: string, userListServiceId: string, peerId: string, name: string, relay: string, members: Member[]) {
+    constructor(client: FluenceClient, chatId: string, historyId: string, userListId: string, peerId: string, name: string, relay: string) {
         this.client = client;
         this.name = name;
-        this.historyServiceId = historyServiceId;
-        this.userListServiceId = userListServiceId;
-        this.members = members.filter(m => m.clientId !== this.client.selfPeerIdStr);
+        this.historyId = historyId;
+        this.userListId = userListId;
+        this.members = [];
         this.relay = relay;
         this.chatPeerId = peerId;
         this.chatId = chatId;
 
         let service = new Service(this.chatId)
         service.registerFunction("join", (args: any[]) => {
-            let m = args;
+            let m;
+            if (Array.isArray(args[0])) {
+                m = args[0]
+            } else {
+                m = args
+            }
             let member = {
                 clientId: m[0],
                 relay: m[1],
                 sig: m[2],
                 name: m[3]
             }
-            console.log(`Member added to ${this.name}: ` + JSON.stringify(member))
             this.addMember(member);
             return {}
         })
 
-        service.registerFunction("name_changed", (args: any[]) => {
+        service.registerFunction("change_name", (args: any[]) => {
             let member = this.members.filter(m => m.clientId === args[0])[0];
             if (member) {
                 member.name = args[1];
@@ -65,7 +65,23 @@ export class FluenceChat {
             return {}
         })
 
-        service.registerFunction("relay_changed", (args: any[]) => {
+        service.registerFunction("all_msgs", (args: any[]) => {
+            args[0].forEach((v: any) => {
+                let name;
+                if (v[2] === this.client.selfPeerIdStr) {
+                    name = "Me"
+                } else {
+                    name = this.members.find(m => m.clientId === v[2])?.name
+                }
+                if (name) {
+                    console.log(`${name}: ${v[1]}`)
+                }
+            })
+
+            return {}
+        })
+
+        service.registerFunction("change_relay", (args: any[]) => {
             let clientId = args[0]
             let member = this.members.filter(m => m.clientId === clientId)[0];
             this.addMember(member);
@@ -86,8 +102,7 @@ export class FluenceChat {
             return {}
         })
 
-        service.registerFunction("message", (args: any[]) => {
-            console.log("message received to " + this.name)
+        service.registerFunction("add", (args: any[]) => {
             let m = this.members.find(m => m.clientId === args[0])
             if (m) {
                 console.log(`${m.name}: ${args[1]}`)
@@ -98,25 +113,57 @@ export class FluenceChat {
         registerService(service)
     }
 
-    async changeName(name: string) {
-        let clientId = this.client.selfPeerIdStr;
-        this.name = name;
+    async join() {
+        let script = this.genScript(this.userListId, "join", ["user", "relay", "sig", "name"])
+        let particle = await build(this.client.selfPeerId, script, {user: this.client.selfPeerIdStr, relay: this.client.connection.nodePeerId.toB58String(), sig: this.client.selfPeerIdStr, name: this.name})
+        await this.client.sendParticle(particle)
+    }
+
+    async getMembers() {
+        let chatPeerId = CHAT_PEER_ID;
+        let relay = this.client.connection.nodePeerId.toB58String();
         let script = `
-        
-        `
-        // await this.client.callService(this.chatPeerId, this.serviceId, USER_LIST, [clientId, name, clientId], "change_name")
-        await this.sendToAll({clientId: clientId, name: name}, NAME_CHANGED)
+                (seq (
+                    (call ("${chatPeerId}" ("identity" "") () void1[]))
+                    (seq (
+                        (call ("${chatPeerId}" ("${this.userListId}" "get_users") () members))
+                        (fold (members m
+                            (par (
+                                (seq (
+                                    (call ("${relay}" ("identity" "") () void[]))
+                                    (call ("${this.client.selfPeerIdStr}" ("${this.chatId}" "join") (m) void3[]))                            
+                                ))                        
+                                (next m)
+                            ))    
+                        ))               
+                    ))
+                ))
+                `
+
+        let particle = await build(this.client.selfPeerId, script, {})
+        await this.client.sendParticle(particle)
+    }
+
+    async changeName(name: string) {
+        let user = this.client.selfPeerIdStr;
+        let signature = this.client.selfPeerIdStr
+
+        let script = this.genScript(this.historyId, "change_name", ["user", "name", "signature"])
+        let particle = await build(this.client.selfPeerId, script, {user, name, signature})
+        await this.client.sendParticle(particle)
     }
 
     /**
      * Publishes current relay to a chat.
      */
     async publishRelay() {
-        let clientId = this.client.selfPeerIdStr;
+        let user = this.client.selfPeerIdStr;
         let relay = this.client.connection.nodePeerId.toB58String();
         let sig = this.client.selfPeerIdStr
-        // await this.client.callService(this.chatPeerId, this.serviceId, USER_LIST, [clientId, relay, sig, clientId], "change_relay")
-        await this.sendToAll({clientId: clientId, relay: relay, sig: sig}, RELAY_CHANGED)
+
+        let script = this.genScript(this.historyId, "change_relay", ["user", "relay", "sig", "signature"])
+        let particle = await build(this.client.selfPeerId, script, {user, relay, sig, signature: sig})
+        await this.client.sendParticle(particle)
     }
 
     /**
@@ -134,32 +181,72 @@ export class FluenceChat {
 
     private addMember(member: Member) {
         if (member.clientId !== this.client.selfPeerIdStr) {
+            if (this.members.find((m) => m.clientId === member.clientId)) {
+                console.log(`Member joined: ${member.name}`)
+            }
             this.members = this.members.filter(m => m.clientId !== member.clientId)
             this.members.push(member)
         }
     }
 
     async deleteUser(user: string) {
-        // await this.client.callService(this.chatPeerId, this.serviceId, USER_LIST, [user, user], "delete")
+
+        let script = this.genScript(this.historyId, "delete", ["user", "signature"])
+        let particle = await build(this.client.selfPeerId, script, {user, signature: user})
+        await this.client.sendParticle(particle)
+
         this.deleteMember(user)
     }
 
     async getHistory(): Promise<any> {
-        // return await this.client.callService(this.chatPeerId, this.serviceId, HISTORY, [], "get_all")
-    }
+        let chatPeerId = CHAT_PEER_ID;
+        let relay = this.client.connection.nodePeerId.toB58String();
+        let script = `
+                (seq (
+                    (call ("${chatPeerId}" ("identity" "") () void1[]))
+                    (seq (
+                        (call ("${chatPeerId}" ("${this.historyId}" "get_all") () messages))                       
+                        (seq (
+                            (call ("${relay}" ("identity" "") () void[]))
+                            (call ("${this.client.selfPeerIdStr}" ("${this.chatId}" "all_msgs") (messages) void3[]))                            
+                        ))                                                                           
+                    ))
+                ))
+                `
 
-    private async sendToAll(args: any, fname: string) {
-        for (const member of this.members) {
-            console.log(`send command '${fname}' to: ` + JSON.stringify(member))
-            // await this.client.fireClient(member.relay, member.clientId, member.sig, MODULE_CHAT, args, fname)
-        }
+        let particle = await build(this.client.selfPeerId, script, {})
+        await this.client.sendParticle(particle)
     }
 
     async sendMessage(msg: string) {
-        // await this.client.callService(this.chatPeerId, this.serviceId, HISTORY, [this.client.selfPeerIdStr, msg], "add")
-        await this.sendToAll({
-            clientId: this.client.selfPeerIdStr,
-            message: msg
-        }, MESSAGE);
+        let script = this.genScript(this.historyId, "add", ["author", "msg"])
+        let particle = await build(this.client.selfPeerId, script, {author: this.client.selfPeerIdStr, msg: msg})
+        console.log("Me: ", msg)
+        await this.client.sendParticle(particle)
+    }
+
+    genScript(serviceId: string, funcName: string, args: string[]): string {
+        let argsStr = args.join(" ")
+        let chatPeerId = CHAT_PEER_ID
+        return `
+                (seq (
+                    (call ("${chatPeerId}" ("identity" "") () void1[]))
+                    (seq (
+                        (call ("${chatPeerId}" ("${serviceId}" "${funcName}") (${argsStr}) void2[]))
+                        (seq (
+                            (call ("${chatPeerId}" ("${this.userListId}" "get_users") () members))
+                            (fold (members m
+                                (par (
+                                    (seq (
+                                        (call (m.$.[1] ("identity" "") () void[]))
+                                        (call (m.$.[0] ("${this.chatId}" "${funcName}") (${argsStr}) void3[]))                            
+                                    ))                        
+                                    (next m)
+                                ))                   
+                            ))
+                        ))
+                    ))
+                ))
+                `
     }
 }
