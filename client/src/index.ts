@@ -110,7 +110,7 @@ async function joinChat(name: string, chatId: string, relayAddress: string, seed
 }
 
 async function getMembersCheck(chatId: string) {
-    let cl = await connect(relays[1].multiaddr);
+    let cl = await connect(relays[1].multiaddr, false);
     let userListId = await cl.getProviders(Buffer.from(chatIdToUserListId(chatId), 'utf8'));
     console.log("user list id: " + userListId);
     console.log(userListId);
