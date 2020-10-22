@@ -1,7 +1,7 @@
-import {FluenceClient} from "fluence/dist/src/fluenceClient";
-import {registerService} from "fluence/dist/src/globalState";
-import {Service} from "fluence/dist/src/callService";
-import {build} from "fluence/dist/src/particle";
+import {FluenceClient} from "fluence/dist/fluenceClient";
+import {registerService} from "fluence/dist/globalState";
+import {Service} from "fluence/dist/callService";
+import {build} from "fluence/dist/particle";
 import {CHAT_PEER_ID} from "./index.ts";
 
 export const HISTORY_NAME = "history"
@@ -126,7 +126,7 @@ export class FluenceChat {
         let relay = this.client.connection.nodePeerId.toB58String();
         let script = `
                 (seq (
-                    (call ("${chatPeerId}" ("identity" "") () void1[]))
+                    (call ("${relay}" ("identity" "") () void1[]))
                     (seq (
                         (call ("${chatPeerId}" ("${this.userListId}" "get_users") () members))
                         (fold (members m
@@ -183,7 +183,7 @@ export class FluenceChat {
 
     private addMember(member: Member) {
         if (member.clientId !== this.client.selfPeerIdStr) {
-            if (this.members.find((m) => m.clientId === member.clientId)) {
+            if (!this.members.find((m) => m.clientId === member.clientId)) {
                 console.log(`Member joined: ${member.name}`)
             }
             this.members = this.members.filter(m => m.clientId !== member.clientId)

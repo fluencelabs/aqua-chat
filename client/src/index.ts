@@ -1,17 +1,17 @@
 import {FluenceChat, HISTORY_NAME, USER_LIST_NAME} from "./fluenceChat.ts";
-import {FluenceClient} from "fluence/dist/src/fluenceClient";
-import {peerIdToSeed, seedToPeerId} from "fluence/dist/src/seed";
-import Fluence from "fluence/dist/src/fluence";
-import {build} from "fluence/dist/src/particle";
+import {FluenceClient} from "fluence/dist/fluenceClient";
+import {peerIdToSeed, seedToPeerId} from "fluence/dist/seed";
+import Fluence from "fluence/dist/fluence";
+import {build} from "fluence/dist/particle";
 import {SQLITE} from "../../artifacts/sqlite.ts";
 import {HISTORY} from "../../artifacts/history.ts";
 import {USER_LIST} from "../../artifacts/userList.ts";
-import {Service} from "fluence/dist/src/callService";
-import {registerService} from "fluence/dist/src/globalState";
+import {Service} from "fluence/dist/callService";
+import {registerService} from "fluence/dist/globalState";
 
 // change these constants in different environment
-const HISTORY_BLUEPRINT = "4b038731-7ecd-448e-b05d-8bf4b294f083";
-const USER_LIST_BLUEPRINT = "1484d8b6-2c36-4691-956c-7b4640c0730f";
+const HISTORY_BLUEPRINT = "a9bbf90d-7b9e-4579-b411-f26e08fa99eb";
+const USER_LIST_BLUEPRINT = "346c239c-034d-4381-9ee3-7ea2760d6540";
 
 // parameters from `fluence-playground` local network
 let relays = [
