@@ -18,13 +18,13 @@ use fluence::fce;
 
 pub fn init() {
     unsafe {
-        invoke("CREATE TABLE IF NOT EXISTS users(user_id INTEGER PRIMARY KEY, user TEXT NOT NULL, relay TEXT NOT NULL, sig TEXT NOT NULL, name TEXT NOT NULL);".to_string());
+        invoke("CREATE TABLE IF NOT EXISTS users(peer_id TEXT PRIMARY KEY, relay TEXT NOT NULL, sig TEXT NOT NULL, name TEXT NOT NULL);".to_string());
     }
     log::info!("tables created");
 }
 
 pub fn user_exists(user: &str) -> bool {
-    let req = format!("SELECT * FROM users WHERE user = '{}'", user);
+    let req = format!("SELECT * FROM users WHERE peer_id = '{}'", user);
     let result = unsafe { invoke(req) };
     log::info!("deletion result:");
     log::info!("{}", result.as_str());
@@ -35,20 +35,20 @@ pub fn user_exists(user: &str) -> bool {
     return true;
 }
 
-pub fn update_name(user: String, name: String) -> String {
+pub fn update_name(peer_id: String, name: String) -> String {
     unsafe {
         invoke(format!(
-            "UPDATE users SET name = '{}' WHERE user = '{}'",
-            name, user
+            "UPDATE users SET name = '{}' WHERE peer_id = '{}'",
+            name, peer_id
         ))
     }
 }
 
-pub fn update_relay(user: String, relay: String, sig: String) -> String {
+pub fn update_relay(peer_id: String, relay: String, signature: String) -> String {
     unsafe {
         invoke(format!(
-            "UPDATE users SET relay = '{}', sig = '{}' WHERE user = '{}'",
-            relay, sig, user
+            "UPDATE users SET relay = '{}', sig = '{}' WHERE peer_id = '{}'",
+            relay, signature, peer_id
         ))
     }
 }
@@ -57,17 +57,17 @@ pub fn get_all_users() -> String {
     unsafe { invoke(format!("SELECT * FROM users")) }
 }
 
-pub fn add_user(user: String, relay: String, sig: String, name: String) -> String {
+pub fn add_user(peer_id: String, relay: String, signature: String, name: String) -> String {
     unsafe {
         invoke(format!(
-            "INSERT INTO users (user,relay,sig,name) VALUES ('{}','{}','{}','{}')",
-            user, relay, sig, name
+            "REPLACE INTO users (peer_id,relay,sig,name) VALUES ('{}','{}','{}','{}')",
+            peer_id, relay, signature, name
         ))
     }
 }
 
-pub fn delete_user(user: &str) -> String {
-    unsafe { invoke(format!("DELETE FROM users WHERE user = '{}';", user)) }
+pub fn delete_user(peer_id: &str) -> String {
+    unsafe { invoke(format!("DELETE FROM users WHERE peer_id = '{}';", peer_id)) }
 }
 
 #[fce]
@@ -75,5 +75,4 @@ pub fn delete_user(user: &str) -> String {
 extern "C" {
     #[link_name = "invoke"]
     pub fn invoke(cmd: String) -> String;
-
 }
