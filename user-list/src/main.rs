@@ -26,8 +26,8 @@ const OWNER: &str = "owner_id";
 
 #[fce]
 struct User {
-    pub client_id: String,
-    pub relay: String,
+    pub peer_id: String,
+    pub relay_id: String,
     pub signature: String,
     pub name: String,
 }
@@ -46,14 +46,13 @@ fn join(user: String, relay: String, signature: String, name: String) -> String 
 fn get_users() -> Vec<User> {
     get_all_users().split("|").filter_map(|user| {
         let mut columns = user.split(",");
-        columns.next();
         let mut next = |field| columns.next().map(|s| s.trim().to_string()).or_else(|| {
             log::warn!("user {} is corrupted, missing field {}", user, field);
             None
         });
         let user = User {
-            client_id: next("client_id")?,
-            relay: next("relay")?,
+            peer_id: next("peer_id")?,
+            relay_id: next("relay_id")?,
             signature: next("sig")?,
             name: next("name")?,
         };
