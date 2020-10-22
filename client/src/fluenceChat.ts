@@ -205,7 +205,7 @@ export class FluenceChat {
         let relay = this.client.connection.nodePeerId.toB58String();
         let script = `
                 (seq (
-                    (call ("${chatPeerId}" ("identity" "") () void1[]))
+                    (call ("${relay}" ("identity" "") () void1[]))
                     (seq (
                         (call ("${chatPeerId}" ("${this.historyId}" "get_all") () messages))                       
                         (seq (
@@ -230,9 +230,10 @@ export class FluenceChat {
     genScript(serviceId: string, funcName: string, args: string[]): string {
         let argsStr = args.join(" ")
         let chatPeerId = CHAT_PEER_ID
+        let relay = this.client.connection.nodePeerId.toB58String();
         return `
                 (seq (
-                    (call ("${chatPeerId}" ("identity" "") () void1[]))
+                    (call ("${relay}" ("identity" "") () void1[]))
                     (seq (
                         (call ("${chatPeerId}" ("${serviceId}" "${funcName}") (${argsStr}) void2[]))
                         (seq (
