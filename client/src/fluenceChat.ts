@@ -37,6 +37,7 @@ export class FluenceChat {
 
         let service = new Service(this.chatId)
         service.registerFunction("join", (args: any[]) => {
+            console.log("join msg: " + JSON.stringify(args))
             let m;
             if (Array.isArray(args[0])) {
                 m = args[0]
@@ -103,6 +104,7 @@ export class FluenceChat {
         })
 
         service.registerFunction("add", (args: any[]) => {
+            console.log("added: " + JSON.stringify(args))
             let m = this.members.find(m => m.clientId === args[0])
             if (m) {
                 console.log(`${m.name}: ${args[1]}`)
