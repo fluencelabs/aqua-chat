@@ -90,19 +90,33 @@ async function createChat(name: string, relayAddress: string, seed?: string): Pr
     return chat;
 }
 
-/*async function connectToChat(chatId: string, relay: string, relayAddress: string, seed: string): Promise<FluenceChat> {
-    let cl = await connect(relayAddress, seed);
-}*/
-
-async function joinChat(name: string, chatId: string, relayAddress: string, seed?: string): Promise<FluenceChat> {
+async function getInfo(chatId: string): Promise<{ historyId: string; userListId: string }> {
     let clInfo = await connect(relays[1].multiaddr, false);
 
     let historyId = (await clInfo.getProviders(Buffer.from(chatIdToHistoryId(chatId), 'utf8')))[0][0].service_id;
     let userListId = (await clInfo.getProviders(Buffer.from(chatIdToUserListId(chatId), 'utf8')))[0][0].service_id;
 
+    return { historyId, userListId }
+}
+
+async function connectToChat(chatId: string, relayAddress: string, seed: string): Promise<FluenceChat> {
+    let info = await getInfo(chatId)
+
     let cl = await connect(relayAddress, true, seed);
 
-    let chat = new FluenceChat(cl, chatId, historyId, userListId, CHAT_PEER_ID, name, cl.connection.nodePeerId.toB58String());
+    let chat = new FluenceChat(cl, chatId, info.historyId, info.userListId, CHAT_PEER_ID, name, cl.connection.nodePeerId.toB58String());
+    await chat.getMembers();
+    await chat.publishRelay();
+    await chat.getHistory();
+
+}
+
+async function joinChat(name: string, chatId: string, relayAddress: string, seed?: string): Promise<FluenceChat> {
+    let info = await getInfo(chatId)
+
+    let cl = await connect(relayAddress, true, seed);
+
+    let chat = new FluenceChat(cl, chatId, info.historyId, info.userListId, CHAT_PEER_ID, name, cl.connection.nodePeerId.toB58String());
     await chat.getMembers();
     await chat.join();
     await chat.getHistory();

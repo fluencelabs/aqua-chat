@@ -161,8 +161,8 @@ export class FluenceChat {
         let relay = this.client.connection.nodePeerId.toB58String();
         let sig = this.client.selfPeerIdStr
 
-        let script = this.genScript(this.historyId, "change_relay", ["user", "relay", "sig", "signature"])
-        let particle = await build(this.client.selfPeerId, script, {user, relay, sig, signature: sig})
+        let script = this.genScript(this.historyId, "change_relay", ["user", "relay", "signature"])
+        let particle = await build(this.client.selfPeerId, script, {user, relay, signature: sig})
         await this.client.sendParticle(particle)
     }
 
