@@ -109,6 +109,8 @@ async function connectToChat(chatId: string, relayAddress: string, seed: string)
     await chat.publishRelay();
     await chat.getHistory();
 
+    return chat;
+
 }
 
 async function joinChat(name: string, chatId: string, relayAddress: string, seed?: string): Promise<FluenceChat> {
