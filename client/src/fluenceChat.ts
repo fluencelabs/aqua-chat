@@ -117,7 +117,7 @@ export class FluenceChat {
 
     async join() {
         let script = this.genScript(this.userListId, "join", ["user", "relay", "sig", "name"])
-        let particle = await build(this.client.selfPeerId, script, {user: this.client.selfPeerIdStr, relay: this.client.connection.nodePeerId.toB58String(), sig: this.client.selfPeerIdStr, name: this.name})
+        let particle = await build(this.client.selfPeerId, script, {user: this.client.selfPeerIdStr, relay: this.client.connection.nodePeerId.toB58String(), sig: this.client.selfPeerIdStr, name: this.name}, 600000)
         await this.client.sendParticle(particle)
     }
 
@@ -142,7 +142,7 @@ export class FluenceChat {
                 ))
                 `
 
-        let particle = await build(this.client.selfPeerId, script, {})
+        let particle = await build(this.client.selfPeerId, script, {}, 600000)
         await this.client.sendParticle(particle)
     }
 
@@ -151,7 +151,7 @@ export class FluenceChat {
         let signature = this.client.selfPeerIdStr
 
         let script = this.genScript(this.historyId, "change_name", ["user", "name", "signature"])
-        let particle = await build(this.client.selfPeerId, script, {user, name, signature})
+        let particle = await build(this.client.selfPeerId, script, {user, name, signature}, 600000)
         await this.client.sendParticle(particle)
     }
 
@@ -164,7 +164,7 @@ export class FluenceChat {
         let sig = this.client.selfPeerIdStr
 
         let script = this.genScript(this.historyId, "change_relay", ["user", "relay", "signature"])
-        let particle = await build(this.client.selfPeerId, script, {user, relay, signature: sig})
+        let particle = await build(this.client.selfPeerId, script, {user, relay, signature: sig}, 600000)
         await this.client.sendParticle(particle)
     }
 
@@ -194,7 +194,7 @@ export class FluenceChat {
     async deleteUser(user: string) {
 
         let script = this.genScript(this.historyId, "delete", ["user", "signature"])
-        let particle = await build(this.client.selfPeerId, script, {user, signature: user})
+        let particle = await build(this.client.selfPeerId, script, {user, signature: user}, 600000)
         await this.client.sendParticle(particle)
 
         this.deleteMember(user)
@@ -216,13 +216,13 @@ export class FluenceChat {
                 ))
                 `
 
-        let particle = await build(this.client.selfPeerId, script, {})
+        let particle = await build(this.client.selfPeerId, script, {}, 600000)
         await this.client.sendParticle(particle)
     }
 
     async sendMessage(msg: string) {
         let script = this.genScript(this.historyId, "add", ["author", "msg"])
-        let particle = await build(this.client.selfPeerId, script, {author: this.client.selfPeerIdStr, msg: msg})
+        let particle = await build(this.client.selfPeerId, script, {author: this.client.selfPeerIdStr, msg: msg}, 600000)
         console.log("Me: ", msg)
         await this.client.sendParticle(particle)
     }
