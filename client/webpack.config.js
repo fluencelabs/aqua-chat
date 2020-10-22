@@ -5,11 +5,21 @@ const CopyWebpackPlugin = require('copy-webpack-plugin')
 
 module.exports = {
     entry: {
-        app: ['./index.js']
+        app: ['./src/index.ts']
     },
     devServer: {
         contentBase: './bundle',
-        hot: true
+        hot: false,
+        inline: false,
+    },
+    module: {
+        rules: [
+            {
+                test: /\.tsx?$/,
+                loader: 'ts-loader',
+                exclude: /node_modules/
+            }
+        ]
     },
     mode: "development",
     output: {
