@@ -9,6 +9,6 @@ name = "user-list"
 path = "src/main.rs"
 
 [dependencies]
-fluence = { git = "https://github.com/fluencelabs/rust-sdk", features = ["logger"] }
+fluence = { git = "https://github.com/fluencelabs/rust-sdk", features = ["logger"], branch = "log" }
 anyhow = "1.0.31"
 log = "0.4.8"
