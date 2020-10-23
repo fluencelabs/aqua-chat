@@ -37,7 +37,6 @@ export class FluenceChat {
 
         let service = new Service(this.chatId)
         service.registerFunction("join", (args: any[]) => {
-            console.log("join msg: " + JSON.stringify(args))
             let m;
             if (Array.isArray(args[0])) {
                 m = args[0]
@@ -57,9 +56,9 @@ export class FluenceChat {
         service.registerFunction("change_name", (args: any[]) => {
             let member = this.members.filter(m => m.clientId === args[0])[0];
             if (member) {
+                this.printNameChanged(member.name, args[1])
                 member.name = args[1];
                 this.addMember(member);
-                console.log("Name changed: " + args[0])
             } else {
                 console.log("Cannot change name. There is no member: " + JSON.stringify(member))
             }
@@ -90,7 +89,7 @@ export class FluenceChat {
                 member.relay = args[1];
                 member.sig = args[2];
                 this.members.push(member);
-                console.log("Relay changed: " + clientId)
+                this.printRelayChanged(member.relay)
             } else {
                 console.log("Cannot change relay. There is no member: " + JSON.stringify(member))
             }
@@ -104,7 +103,6 @@ export class FluenceChat {
         })
 
         service.registerFunction("add", (args: any[]) => {
-            console.log("added: " + JSON.stringify(args))
             let m = this.members.find(m => m.clientId === args[0])
             if (m) {
                 console.log(`${m.name}: ${args[1]}`)
@@ -181,10 +179,27 @@ export class FluenceChat {
         this.members = this.members.filter(m => m.clientId !== clientId)
     }
 
+    printNameChanged(oldName: string, name: string) {
+        console.log(`Member '${oldName}' changed name to '${name}'.`)
+    }
+
+    printRelayChanged(relay: string) {
+        console.log(`Member '${relay}' changed its relay address.'.`)
+    }
+
     private addMember(member: Member) {
         if (member.clientId !== this.client.selfPeerIdStr) {
-            if (!this.members.find((m) => m.clientId === member.clientId)) {
-                console.log(`Member joined: ${member.name}`)
+            let oldMember = this.members.find((m) => m.clientId === member.clientId)
+            if (!oldMember) {
+                console.log(`Member joined: ${member.name}.`)
+            } else {
+                if (oldMember.name !== member.name) {
+                    this.printNameChanged(oldMember.name, member.name);
+                }
+
+                if (oldMember.relay !== member.relay) {
+                    this.printRelayChanged(member.relay)
+                }
             }
             this.members = this.members.filter(m => m.clientId !== member.clientId)
             this.members.push(member)
@@ -192,7 +207,6 @@ export class FluenceChat {
     }
 
     async deleteUser(user: string) {
-
         let script = this.genScript(this.historyId, "delete", ["user", "signature"])
         let particle = await build(this.client.selfPeerId, script, {user, signature: user}, 600000)
         await this.client.sendParticle(particle)
