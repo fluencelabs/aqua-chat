@@ -140,8 +140,8 @@ export class FluenceChat {
         console.log(`Member '${oldName}' changed name to '${name}'.`)
     }
 
-    printRelayChanged(relay: string) {
-        console.log(`Member '${relay}' changed its relay address.'.`)
+    printRelayChanged(name: string) {
+        console.log(`Member '${name}' changed its relay address.`)
     }
 
     private addMember(member: Member) {
@@ -155,7 +155,7 @@ export class FluenceChat {
                 }
 
                 if (oldMember.relay !== member.relay) {
-                    this.printRelayChanged(member.relay)
+                    this.printRelayChanged(member.name)
                 }
             }
             this.members = this.members.filter(m => m.clientId !== member.clientId)

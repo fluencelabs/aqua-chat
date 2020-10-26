@@ -10,8 +10,8 @@ import {Service} from "fluence/dist/callService";
 import {registerService} from "fluence/dist/globalState";
 
 // change these constants in different environment
-const HISTORY_BLUEPRINT = "6936e9df-6c2d-4bd6-93e9-1e69aa9748bd";
-const USER_LIST_BLUEPRINT = "7b4d57b0-57bc-4a65-85ae-b9d6e6033871";
+const HISTORY_BLUEPRINT = "0978157a-02a7-4daf-8e4d-de27aa327f3a";
+const USER_LIST_BLUEPRINT = "8b37f275-2e0c-415d-af2e-dc3316ad5652";
 
 // parameters from `fluence-playground` local network
 let relays = [
