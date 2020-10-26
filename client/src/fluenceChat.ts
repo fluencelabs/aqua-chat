@@ -53,18 +53,6 @@ export class FluenceChat {
             return {}
         })
 
-        service.registerFunction("change_name", (args: any[]) => {
-            let member = this.members.filter(m => m.clientId === args[0])[0];
-            if (member) {
-                this.printNameChanged(member.name, args[1])
-                member.name = args[1];
-                this.addMember(member);
-            } else {
-                console.log("Cannot change name. There is no member: " + JSON.stringify(member))
-            }
-            return {}
-        })
-
         service.registerFunction("all_msgs", (args: any[]) => {
             args[0].forEach((v: any) => {
                 let name;
@@ -78,21 +66,6 @@ export class FluenceChat {
                 }
             })
 
-            return {}
-        })
-
-        service.registerFunction("change_relay", (args: any[]) => {
-            let clientId = args[0]
-            let member = this.members.filter(m => m.clientId === clientId)[0];
-            this.addMember(member);
-            if (member) {
-                member.relay = args[1];
-                member.sig = args[2];
-                this.members.push(member);
-                this.printRelayChanged(member.relay)
-            } else {
-                console.log("Cannot change relay. There is no member: " + JSON.stringify(member))
-            }
             return {}
         })
 
@@ -190,12 +163,13 @@ export class FluenceChat {
         }
     }
 
-    async deleteUser(user: string) {
+    async quit() {
+        let user = this.client.selfPeerIdStr;
         let script = this.genScript(this.historyId, "delete", ["user", "signature"])
         let particle = await build(this.client.selfPeerId, script, {user, signature: user}, 600000)
         await this.client.sendParticle(particle)
 
-        this.deleteMember(user)
+        console.log("You left chat.")
     }
 
     async getHistory(): Promise<any> {
