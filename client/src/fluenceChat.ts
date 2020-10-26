@@ -145,25 +145,8 @@ export class FluenceChat {
     }
 
     async changeName(name: string) {
-        let user = this.client.selfPeerIdStr;
-        let signature = this.client.selfPeerIdStr
-
-        let script = this.genScript(this.historyId, "change_name", ["user", "name", "signature"])
-        let particle = await build(this.client.selfPeerId, script, {user, name, signature}, 600000)
-        await this.client.sendParticle(particle)
-    }
-
-    /**
-     * Publishes current relay to a chat.
-     */
-    async publishRelay() {
-        let user = this.client.selfPeerIdStr;
-        let relay = this.client.connection.nodePeerId.toB58String();
-        let sig = this.client.selfPeerIdStr
-
-        let script = this.genScript(this.historyId, "change_relay", ["user", "relay", "signature"])
-        let particle = await build(this.client.selfPeerId, script, {user, relay, signature: sig}, 600000)
-        await this.client.sendParticle(particle)
+        this.name = name;
+        await this.join();
     }
 
     /**
@@ -172,7 +155,8 @@ export class FluenceChat {
      */
     async reconnect(multiaddr: string) {
         await this.client.connect(multiaddr);
-        await this.publishRelay();
+        this.relay = this.client.connection.nodePeerId.toB58String();
+        await this.join();
     }
 
     private deleteMember(clientId: string) {
