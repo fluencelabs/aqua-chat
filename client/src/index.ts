@@ -99,20 +99,6 @@ async function getInfo(chatId: string): Promise<{ historyId: string; userListId:
     return { historyId, userListId }
 }
 
-async function connectToChat(chatId: string, relayAddress: string, seed: string): Promise<FluenceChat> {
-    let info = await getInfo(chatId)
-
-    let cl = await connect(relayAddress, true, seed);
-
-    let chat = new FluenceChat(cl, chatId, info.historyId, info.userListId, CHAT_PEER_ID, name, cl.connection.nodePeerId.toB58String());
-    await chat.getMembers();
-    await chat.publishRelay();
-    await chat.getHistory();
-
-    return chat;
-
-}
-
 async function joinChat(name: string, chatId: string, relayAddress: string, seed?: string): Promise<FluenceChat> {
     let info = await getInfo(chatId)
 
