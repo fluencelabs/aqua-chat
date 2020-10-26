@@ -2,12 +2,9 @@ import {FluenceChat, HISTORY_NAME, USER_LIST_NAME} from "./fluenceChat.ts";
 import {FluenceClient} from "fluence/dist/fluenceClient";
 import {peerIdToSeed, seedToPeerId} from "fluence/dist/seed";
 import Fluence from "fluence/dist/fluence";
-import {build} from "fluence/dist/particle";
 import {SQLITE} from "../../artifacts/sqlite.ts";
 import {HISTORY} from "../../artifacts/history.ts";
 import {USER_LIST} from "../../artifacts/userList.ts";
-import {Service} from "fluence/dist/callService";
-import {registerService} from "fluence/dist/globalState";
 
 // change these constants in different environment
 const HISTORY_BLUEPRINT = "6936e9df-6c2d-4bd6-93e9-1e69aa9748bd";
@@ -45,6 +42,8 @@ let relays = [
     }
 ]
 
+let currentChat: FluenceChat | undefined = undefined;
+
 export const CHAT_PEER_ID = relays[1].peerId;
 
 function chatIdToHistoryId(chatId: string) {
@@ -55,23 +54,17 @@ function chatIdToUserListId(chatId: string) {
     return chatId + "_userlist"
 }
 
-function getMembersScript(chatPeerId: string, userListId: string, relay: string, client: string): string {
-    return `
-    (seq (
-        (call ("${chatPeerId}" ("identity" "") () void[]))       
-        (seq (
-            (call ("${chatPeerId}" ("${userListId}" "get_users") () members))
-            (seq (
-                (call ("${relay}" ("identity" "") () void[]))
-                (call ("${client}" ("members" "") (members) void[]))
-            ))
-        ))        
-    ))`
-}
-
 Fluence.setLogLevel('error')
 
-async function createChat(name: string, relayAddress: string, seed?: string): Promise<FluenceChat> {
+function getRandomRelayAddr(): string {
+    let relay = Math.floor(Math.random() * relays.length)
+    return relays[relay].multiaddr
+}
+
+// Create a new chat. Chat Id will be printed in a console.
+// New peer id will be generated with empty 'seed'. Random relay address will be used with empty 'relayAddress'
+async function createChat(name: string, seed?: string, relayAddress?: string): Promise<FluenceChat> {
+    checkCurrentChat();
     let clCreation = await connect(relays[1].multiaddr, false);
     let userListId = await clCreation.createService(USER_LIST_BLUEPRINT);
     let historyId = await clCreation.createService(HISTORY_BLUEPRINT);
@@ -82,14 +75,22 @@ async function createChat(name: string, relayAddress: string, seed?: string): Pr
 
     console.log("CHAT ID: " + chatId);
 
+    if (!relayAddress) {
+        relayAddress = getRandomRelayAddr()
+        console.log(`Connect to random node: ${relayAddress}`)
+    }
+
     let cl = await connect(relayAddress, true, seed);
 
     let chat =  new FluenceChat(cl, chatId, historyId, userListId, CHAT_PEER_ID, name, cl.connection.nodePeerId.toB58String());
     await chat.join();
 
+    currentChat = chat;
+
     return chat;
 }
 
+// Get an info about chat providers from Kademlia network.
 async function getInfo(chatId: string): Promise<{ historyId: string; userListId: string }> {
     let clInfo = await connect(relays[1].multiaddr, false);
 
@@ -99,40 +100,33 @@ async function getInfo(chatId: string): Promise<{ historyId: string; userListId:
     return { historyId, userListId }
 }
 
-async function joinChat(name: string, chatId: string, relayAddress: string, seed?: string): Promise<FluenceChat> {
+// Throws an error if the chat client been already created.
+function checkCurrentChat() {
+    if (currentChat) {
+        throw new Error("Chat is already created. Use 'chat' variable to use it. Or refresh page to create a new one.")
+    }
+}
+
+// Join to existed chat. New peer id will be generated with empty 'seed'. Random relay address will be used with empty 'relayAddress'
+async function joinChat(name: string, chatId: string, seed?: string, relayAddress?: string): Promise<FluenceChat> {
+    checkCurrentChat();
     let info = await getInfo(chatId)
 
     let cl = await connect(relayAddress, true, seed);
+
+    if (!relayAddress) {
+        relayAddress = getRandomRelayAddr()
+        console.log(`Connect to random node: ${relayAddress}`)
+    }
 
     let chat = new FluenceChat(cl, chatId, info.historyId, info.userListId, CHAT_PEER_ID, name, cl.connection.nodePeerId.toB58String());
     await chat.getMembers();
     await chat.join();
     await chat.getHistory();
+
+    currentChat = chat;
+
     return chat;
-}
-
-async function getMembersCheck(chatId: string) {
-    let cl = await connect(relays[1].multiaddr, false);
-    let userListId = await cl.getProviders(Buffer.from(chatIdToUserListId(chatId), 'utf8'));
-    console.log("user list id: " + userListId);
-    console.log(userListId);
-    await getMembers(cl, userListId[0][0].service_id)
-}
-
-async function getMembers(client: FluenceClient, userListId: string): Promise<any> {
-    let service = new Service("members")
-    service.registerFunction("", (args: any[]) => {
-        console.log("MEMBERS:")
-        console.log(args)
-        return {}
-    })
-    registerService(service)
-    let getMembersScr = getMembersScript(CHAT_PEER_ID, userListId, client.connection.nodePeerId.toB58String(), client.selfPeerIdStr)
-    let particleGetMembers = await build(client.selfPeerId, getMembersScr, {})
-    let members = await client.sendParticle(particleGetMembers)
-
-    console.log(members)
-    return members
 }
 
 /*async function scenario() {
@@ -178,6 +172,7 @@ async function getMembers(client: FluenceClient, userListId: string): Promise<an
 declare global {
     interface Window {
         joinChat: any;
+        chat: any
         createChat: any;
         relays: any;
         scenario: any;
@@ -190,12 +185,11 @@ declare global {
 window.joinChat = joinChat;
 window.createChat = createChat;
 window.relays = relays;
-window.getMembersCheck = getMembersCheck;
+window.chat = currentChat;
 // window.scenario = scenario;
-// window.connectToChat = connectToChat;
 window.publishBlueprint = publishBlueprint;
-// Fluence.setLogLevel('trace')
 
+// Connect to one of the node. Generate seed if it is undefined.
 async function connect(relayAddress: string, printPid: boolean, seed?: string): Promise<FluenceClient> {
     let pid;
     if (seed) {
@@ -212,7 +206,7 @@ async function connect(relayAddress: string, printPid: boolean, seed?: string): 
     return await Fluence.connect(relayAddress, pid);
 }
 
-// publishes a blueprint for chat application and shows its id
+// Publishes a blueprint for chat application and shows its id
 async function publishBlueprint() {
     let pid = await Fluence.generatePeerId();
     let cl = await Fluence.connect(relays[1].multiaddr, pid);

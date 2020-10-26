@@ -35,6 +35,7 @@ export class FluenceChat {
         this.chatPeerId = peerId;
         this.chatId = chatId;
 
+        // register service with function that will handle incoming messages from a chat
         let service = new Service(this.chatId)
         service.registerFunction("join", (args: any[]) => {
             let m;
@@ -86,12 +87,18 @@ export class FluenceChat {
         registerService(service)
     }
 
+    /**
+     * Call 'join' service and send notifications to all members.
+     */
     async join() {
         let script = this.genScript(this.userListId, "join", ["user", "relay", "sig", "name"])
         let particle = await build(this.client.selfPeerId, script, {user: this.client.selfPeerIdStr, relay: this.client.connection.nodePeerId.toB58String(), sig: this.client.selfPeerIdStr, name: this.name}, 600000)
         await this.client.sendParticle(particle)
     }
 
+    /**
+     * Send all members one by one itself by script.
+     */
     async getMembers() {
         let chatPeerId = CHAT_PEER_ID;
         let relay = this.client.connection.nodePeerId.toB58String();
@@ -117,6 +124,10 @@ export class FluenceChat {
         await this.client.sendParticle(particle)
     }
 
+    /**
+     * Rejoin with another name.
+     * @param name
+     */
     async changeName(name: string) {
         this.name = name;
         await this.join();
@@ -136,11 +147,11 @@ export class FluenceChat {
         this.members = this.members.filter(m => m.clientId !== clientId)
     }
 
-    printNameChanged(oldName: string, name: string) {
+    private static printNameChanged(oldName: string, name: string) {
         console.log(`Member '${oldName}' changed name to '${name}'.`)
     }
 
-    printRelayChanged(relay: string) {
+    private static printRelayChanged(relay: string) {
         console.log(`Member '${relay}' changed its relay address.'.`)
     }
 
@@ -151,11 +162,11 @@ export class FluenceChat {
                 console.log(`Member joined: ${member.name}.`)
             } else {
                 if (oldMember.name !== member.name) {
-                    this.printNameChanged(oldMember.name, member.name);
+                    FluenceChat.printNameChanged(oldMember.name, member.name);
                 }
 
                 if (oldMember.relay !== member.relay) {
-                    this.printRelayChanged(member.relay)
+                    FluenceChat.printRelayChanged(member.relay)
                 }
             }
             this.members = this.members.filter(m => m.clientId !== member.clientId)
@@ -163,6 +174,9 @@ export class FluenceChat {
         }
     }
 
+    /**
+     * Quit from chat.
+     */
     async quit() {
         let user = this.client.selfPeerIdStr;
         let script = this.genScript(this.historyId, "delete", ["user", "signature"])
@@ -172,6 +186,9 @@ export class FluenceChat {
         console.log("You left chat.")
     }
 
+    /**
+     * Print all history to a console.
+     */
     async getHistory(): Promise<any> {
         let chatPeerId = CHAT_PEER_ID;
         let relay = this.client.connection.nodePeerId.toB58String();
@@ -192,6 +209,10 @@ export class FluenceChat {
         await this.client.sendParticle(particle)
     }
 
+    /**
+     * Send message to chat. Notice all connected members.
+     * @param msg
+     */
     async sendMessage(msg: string) {
         let script = this.genScript(this.historyId, "add", ["author", "msg"])
         let particle = await build(this.client.selfPeerId, script, {author: this.client.selfPeerIdStr, msg: msg}, 600000)
@@ -199,7 +220,13 @@ export class FluenceChat {
         await this.client.sendParticle(particle)
     }
 
-    genScript(serviceId: string, funcName: string, args: string[]): string {
+    /**
+     * Generate a script that will pass arguments to remote service and will send notifications to all chat members.
+     * @param serviceId service to send
+     * @param funcName function to call
+     * @param args
+     */
+    private genScript(serviceId: string, funcName: string, args: string[]): string {
         let argsStr = args.join(" ")
         let chatPeerId = CHAT_PEER_ID
         let relay = this.client.connection.nodePeerId.toB58String();
