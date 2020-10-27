@@ -96,10 +96,18 @@ export class FluenceChat {
         await this.client.sendParticle(particle)
     }
 
+    printMembers() {
+        console.log("Members:")
+        console.log(this.name)
+        this.members.forEach((m) => {
+            console.log(m.name)
+        })
+    }
+
     /**
      * Send all members one by one itself by script.
      */
-    async getMembers() {
+    async updateMembers() {
         let chatPeerId = CHAT_PEER_ID;
         let relay = this.client.connection.nodePeerId.toB58String();
         let script = `

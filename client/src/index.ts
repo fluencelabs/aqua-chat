@@ -112,15 +112,15 @@ async function joinChat(name: string, chatId: string, seed?: string, relayAddres
     checkCurrentChat();
     let info = await getInfo(chatId)
 
-    let cl = await connect(relayAddress, true, seed);
-
     if (!relayAddress) {
         relayAddress = getRandomRelayAddr()
         console.log(`Connect to random node: ${relayAddress}`)
     }
 
+    let cl = await connect(relayAddress, true, seed);
+
     let chat = new FluenceChat(cl, chatId, info.historyId, info.userListId, CHAT_PEER_ID, name, cl.connection.nodePeerId.toB58String());
-    await chat.getMembers();
+    await chat.updateMembers();
     await chat.join();
     await chat.getHistory();
 
@@ -211,9 +211,9 @@ async function publishBlueprint() {
     let pid = await Fluence.generatePeerId();
     let cl = await Fluence.connect(relays[1].multiaddr, pid);
 
-    await cl.addModule("sqlite", SQLITE);
-    await cl.addModule(HISTORY_NAME, HISTORY);
-    await cl.addModule(USER_LIST_NAME, USER_LIST);
+    await cl.addModule("sqlite", SQLITE, undefined, 20000);
+    await cl.addModule(HISTORY_NAME, HISTORY, undefined, 20000);
+    await cl.addModule(USER_LIST_NAME, USER_LIST, undefined, 20000);
 
     let blueprintIdHistory = await cl.addBlueprint("user_list", ["sqlite", HISTORY_NAME])
     let blueprintIdUserList = await cl.addBlueprint("user_list", ["sqlite", USER_LIST_NAME])
