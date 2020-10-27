@@ -7,8 +7,8 @@ import {HISTORY} from "../../artifacts/history.ts";
 import {USER_LIST} from "../../artifacts/userList.ts";
 
 // change these constants in different environment
-const HISTORY_BLUEPRINT = "2265646d-4021-47e4-83a8-9f9af7018126";
-const USER_LIST_BLUEPRINT = "8910712d-25dc-4202-ac10-143034a709cb";
+const HISTORY_BLUEPRINT = "f896116b-89a4-4fc2-989e-5105a32ac079";
+const USER_LIST_BLUEPRINT = "9e0d25a2-0314-4894-be71-db83b0147b7e";
 // const HISTORY_BLUEPRINT = "6936e9df-6c2d-4bd6-93e9-1e69aa9748bd";
 // const USER_LIST_BLUEPRINT = "7b4d57b0-57bc-4a65-85ae-b9d6e6033871";
 
