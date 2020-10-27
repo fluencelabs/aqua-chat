@@ -58,6 +58,10 @@ let chat = joinChat("Your Name", "CHAT ID", "SEED", "Node Multiaddr")
 
 You can use preassigned node multiaddresses:
 relays[0..6].multiaddr
+
+You can check some of used Aquamarine scripts:
+chat.printGetHistoryScript()
+chat.printJoinScript()
 `)
 
 declare global {

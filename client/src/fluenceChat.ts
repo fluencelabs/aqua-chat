@@ -193,25 +193,29 @@ export class FluenceChat {
         console.log("You left chat.")
     }
 
+    private getHistoryScript(): string {
+        let chatPeerId = CHAT_PEER_ID;
+        let relay = this.client.connection.nodePeerId.toB58String();
+
+        return `
+(seq (
+    (call ("${relay}" ("identity" "") () void1[]))
+    (seq (
+        (call ("${chatPeerId}" ("${this.historyId}" "get_all") () messages))                       
+        (seq (
+            (call ("${relay}" ("identity" "") () void[]))
+            (call ("${this.client.selfPeerIdStr}" ("${this.chatId}" "all_msgs") (messages) void3[]))                            
+        ))                                                                           
+    ))
+))
+        `
+    }
+
     /**
      * Print all history to a console.
      */
     async getHistory(): Promise<any> {
-        let chatPeerId = CHAT_PEER_ID;
-        let relay = this.client.connection.nodePeerId.toB58String();
-        let script = `
-                (seq (
-                    (call ("${relay}" ("identity" "") () void1[]))
-                    (seq (
-                        (call ("${chatPeerId}" ("${this.historyId}" "get_all") () messages))                       
-                        (seq (
-                            (call ("${relay}" ("identity" "") () void[]))
-                            (call ("${this.client.selfPeerIdStr}" ("${this.chatId}" "all_msgs") (messages) void3[]))                            
-                        ))                                                                           
-                    ))
-                ))
-                `
-
+        let script = this.getHistoryScript();
         let particle = await build(this.client.selfPeerId, script, {}, 600000)
         await this.client.sendParticle(particle)
     }
@@ -227,6 +231,14 @@ export class FluenceChat {
         await this.client.sendParticle(particle)
     }
 
+    printJoinScript() {
+        console.log(this.genScript(this.userListId, "join", ["user", "relay", "sig", "name"]))
+    }
+
+    printGetHistoryScript() {
+        console.log(this.getHistoryScript())
+    }
+
     /**
      * Generate a script that will pass arguments to remote service and will send notifications to all chat members.
      * @param serviceId service to send
@@ -238,24 +250,24 @@ export class FluenceChat {
         let chatPeerId = CHAT_PEER_ID
         let relay = this.client.connection.nodePeerId.toB58String();
         return `
-                (seq (
-                    (call ("${relay}" ("identity" "") () void1[]))
+(seq (
+    (call ("${relay}" ("identity" "") () void1[]))
+    (seq (
+        (call ("${chatPeerId}" ("${serviceId}" "${funcName}") (${argsStr}) void2[]))
+        (seq (
+            (call ("${chatPeerId}" ("${this.userListId}" "get_users") () members))
+            (fold (members m
+                (par (
                     (seq (
-                        (call ("${chatPeerId}" ("${serviceId}" "${funcName}") (${argsStr}) void2[]))
-                        (seq (
-                            (call ("${chatPeerId}" ("${this.userListId}" "get_users") () members))
-                            (fold (members m
-                                (par (
-                                    (seq (
-                                        (call (m.$.[1] ("identity" "") () void[]))
-                                        (call (m.$.[0] ("${this.chatId}" "${funcName}") (${argsStr}) void3[]))                            
-                                    ))                        
-                                    (next m)
-                                ))                   
-                            ))
-                        ))
-                    ))
-                ))
+                        (call (m.$.[1] ("identity" "") () void[]))
+                        (call (m.$.[0] ("${this.chatId}" "${funcName}") (${argsStr}) void3[]))                            
+                    ))                        
+                    (next m)
+                ))                   
+            ))
+        ))
+    ))
+))
                 `
     }
 }
