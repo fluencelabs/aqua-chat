@@ -83,6 +83,7 @@ export async function joinChat(name: string, chatId: string, seed?: string, rela
     let cl = await connect(relayAddress, true, seed);
 
     let chat = new FluenceChat(cl, chatId, info.historyId, info.userListId, CHAT_PEER_ID, name, cl.connection.nodePeerId.toB58String());
+    console.log("You joined to chat.")
     await chat.updateMembers();
     await chat.join();
     await chat.getHistory();
