@@ -4,9 +4,9 @@ import {FluenceClient} from "fluence/dist/fluenceClient";
 import {Service} from "fluence/dist/callService";
 import {build} from "fluence/dist/particle";
 import {registerService} from "fluence/dist/globalState";
-import {SQLITE} from "../../artifacts/sqlite.ts";
-import {USER_LIST} from "../../artifacts/userList.ts";
-import {HISTORY} from "../../artifacts/history.ts";
+import {SQLITE_BS64} from "../../artifacts/sqliteBs64";
+import {USER_LIST_BS64} from "../../artifacts/userListBs64";
+import {HISTORY_BS64} from "../../artifacts/historyBs64";
 
 type Relay = { peerId: string; multiaddr: string };
 
@@ -129,8 +129,8 @@ async function addModules() {
     Fluence.setLogLevel("debug")
     let client = await Fluence.connect(relays[1].multiaddr, pid);
     // await client.addModule("sqlite", SQLITE, 20000)
-    await client.addModule("user-list", USER_LIST)
-    await client.addModule("history", HISTORY)
+    await client.addModule("user-list", USER_LIST_BS64)
+    await client.addModule("history", HISTORY_BS64)
 }
 
 async function init(relay: number, name: string, seed?: string): Promise<AquaClient> {

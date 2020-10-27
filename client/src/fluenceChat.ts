@@ -2,7 +2,7 @@ import {FluenceClient} from "fluence/dist/fluenceClient";
 import {registerService} from "fluence/dist/globalState";
 import {Service} from "fluence/dist/callService";
 import {build} from "fluence/dist/particle";
-import {CHAT_PEER_ID} from "./index.ts";
+import {CHAT_PEER_ID} from "./index";
 
 export const HISTORY_NAME = "history"
 export const USER_LIST_NAME = "user-list"
@@ -15,7 +15,6 @@ export interface Member {
 }
 
 export class FluenceChat {
-
     client: FluenceClient
     historyId: string
     userListId: string

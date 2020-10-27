@@ -1,19 +1,13 @@
-import {FluenceChat, HISTORY_NAME, USER_LIST_NAME} from "./fluenceChat.ts";
-import {FluenceClient} from "fluence/dist/fluenceClient";
-import {peerIdToSeed, seedToPeerId} from "fluence/dist/seed";
 import Fluence from "fluence/dist/fluence";
-import {SQLITE} from "../../artifacts/sqlite.ts";
-import {HISTORY} from "../../artifacts/history.ts";
-import {USER_LIST} from "../../artifacts/userList.ts";
+
+import {createChat, currentChat, joinChat, publishBlueprint} from "./globalFunctions";
 
 // change these constants in different environment
-const HISTORY_BLUEPRINT = "f896116b-89a4-4fc2-989e-5105a32ac079";
-const USER_LIST_BLUEPRINT = "9e0d25a2-0314-4894-be71-db83b0147b7e";
-// const HISTORY_BLUEPRINT = "6936e9df-6c2d-4bd6-93e9-1e69aa9748bd";
-// const USER_LIST_BLUEPRINT = "7b4d57b0-57bc-4a65-85ae-b9d6e6033871";
+export const HISTORY_BLUEPRINT = "f896116b-89a4-4fc2-989e-5105a32ac079";
+export const USER_LIST_BLUEPRINT = "9e0d25a2-0314-4894-be71-db83b0147b7e";
 
 // parameters from `fluence-playground` local network
-let relays = [
+export let relays = [
     {
         multiaddr: "/ip4/138.197.177.2/tcp/9001/ws/p2p/12D3KooWEXNUbCXooUwHrHBbrmjsrpHXoEphPwbjQXEGyzbqKnE9",
         peerId: "12D3KooWEXNUbCXooUwHrHBbrmjsrpHXoEphPwbjQXEGyzbqKnE9"
@@ -44,132 +38,27 @@ let relays = [
     }
 ]
 
-let currentChat: FluenceChat | undefined = undefined;
-
 export const CHAT_PEER_ID = relays[1].peerId;
-
-function chatIdToHistoryId(chatId: string) {
-    return chatId + "_history"
-}
-
-function chatIdToUserListId(chatId: string) {
-    return chatId + "_userlist"
-}
 
 Fluence.setLogLevel('error')
 
-function getRandomRelayAddr(): string {
-    let relay = Math.floor(Math.random() * relays.length)
-    return relays[relay].multiaddr
-}
+console.log(`
+Welcome to Fluence Demo Chat Application
+Use this commands to start:
+let chat = await createChat("Your Name") // create a new chat instance and print your seed and new chat id
+let chat = await joinChat("Your Name", "Chat Id") // join to an existing chat and print your seed
 
-// Create a new chat. Chat Id will be printed in a console.
-// New peer id will be generated with empty 'seed'. Random relay address will be used with empty 'relayAddress'
-async function createChat(name: string, seed?: string, relayAddress?: string): Promise<FluenceChat> {
-    checkCurrentChat();
-    let clCreation = await connect(relays[1].multiaddr, false);
-    let userListId = await clCreation.createService(USER_LIST_BLUEPRINT);
-    let historyId = await clCreation.createService(HISTORY_BLUEPRINT);
+chat.sendMessage("Your Message") // send a message to all chat members
+chat.changeName("New Name") // change your name
 
-    let chatId = Math.random().toString(36).substring(7);
-    await clCreation.addProvider(Buffer.from(chatIdToHistoryId(chatId), 'utf8'), relays[1].peerId, historyId);
-    await clCreation.addProvider(Buffer.from(chatIdToUserListId(chatId), 'utf8'), relays[1].peerId, userListId);
+You can use your seed to reconnect to chat later or from other computer.
+You can use a specific node to connect with.
+let chat = createChat("Your Name", "SEED", "Node Multiaddr")
+let chat = joinChat("Your Name", "CHAT ID", "SEED", "Node Multiaddr")
 
-    console.log("CHAT ID: " + chatId);
-
-    if (!relayAddress) {
-        relayAddress = getRandomRelayAddr()
-        console.log(`Connect to random node: ${relayAddress}`)
-    }
-
-    let cl = await connect(relayAddress, true, seed);
-
-    let chat =  new FluenceChat(cl, chatId, historyId, userListId, CHAT_PEER_ID, name, cl.connection.nodePeerId.toB58String());
-    await chat.join();
-
-    currentChat = chat;
-
-    return chat;
-}
-
-// Get an info about chat providers from Kademlia network.
-async function getInfo(chatId: string): Promise<{ historyId: string; userListId: string }> {
-    let clInfo = await connect(relays[1].multiaddr, false);
-
-    let historyId = (await clInfo.getProviders(Buffer.from(chatIdToHistoryId(chatId), 'utf8')))[0][0].service_id;
-    let userListId = (await clInfo.getProviders(Buffer.from(chatIdToUserListId(chatId), 'utf8')))[0][0].service_id;
-
-    return { historyId, userListId }
-}
-
-// Throws an error if the chat client been already created.
-function checkCurrentChat() {
-    if (currentChat) {
-        throw new Error("Chat is already created. Use 'chat' variable to use it. Or refresh page to create a new one.")
-    }
-}
-
-// Join to existed chat. New peer id will be generated with empty 'seed'. Random relay address will be used with empty 'relayAddress'
-async function joinChat(name: string, chatId: string, seed?: string, relayAddress?: string): Promise<FluenceChat> {
-    checkCurrentChat();
-    let info = await getInfo(chatId)
-
-    if (!relayAddress) {
-        relayAddress = getRandomRelayAddr()
-        console.log(`Connect to random node: ${relayAddress}`)
-    }
-
-    let cl = await connect(relayAddress, true, seed);
-
-    let chat = new FluenceChat(cl, chatId, info.historyId, info.userListId, CHAT_PEER_ID, name, cl.connection.nodePeerId.toB58String());
-    await chat.updateMembers();
-    await chat.join();
-    await chat.getHistory();
-
-    currentChat = chat;
-
-    return chat;
-}
-
-/*async function scenario() {
-    console.log("start")
-    let creator = await createChat("Alice", relays[1].peerId, relays[1].multiaddr)
-    console.log("chat created")
-    await delay(1000)
-    let user = await joinChat("Bob", creator.serviceId, relays[2].peerId, relays[2].multiaddr)
-    console.log("user joined")
-
-    await delay(1000)
-
-    console.log("creator send message")
-    await creator.sendMessage("hello")
-    await delay(1000)
-    console.log("user send message")
-    await user.sendMessage("hi")
-
-    await user.reconnect(relays[0].multiaddr);
-
-    console.log("creator send second message")
-    await creator.sendMessage("how ya doin")
-    await delay(1000)
-    console.log("user send second message")
-    await user.sendMessage("ama fine")
-
-    await user.changeName("John")
-
-    console.log("creator send second message")
-    await creator.sendMessage("what is your name?")
-    await delay(1000)
-    console.log("user send second message")
-    await user.sendMessage("Not Bob")
-
-    let h1 = await creator.getHistory();
-    console.log("history creator: " + JSON.stringify(h1))
-    let h2 = await user.getHistory();
-    console.log("history user: " + JSON.stringify(h2))
-    let members = await getMembers(user.client, user.serviceId)
-    console.log("members: " + JSON.stringify(members))
-}*/
+You can use preassigned node multiaddresses:
+relays[0..6].multiaddr
+`)
 
 declare global {
     interface Window {
@@ -188,38 +77,7 @@ window.joinChat = joinChat;
 window.createChat = createChat;
 window.relays = relays;
 window.chat = currentChat;
-// window.scenario = scenario;
 window.publishBlueprint = publishBlueprint;
 
-// Connect to one of the node. Generate seed if it is undefined.
-async function connect(relayAddress: string, printPid: boolean, seed?: string): Promise<FluenceClient> {
-    let pid;
-    if (seed) {
-        pid = await seedToPeerId(seed);
-    } else {
-        pid = await Fluence.generatePeerId();
-    }
 
-    if (printPid) {
-        console.log("SEED = " + peerIdToSeed(pid))
-        console.log("PID = " + pid.toB58String())
-    }
-
-    return await Fluence.connect(relayAddress, pid);
-}
-
-// Publishes a blueprint for chat application and shows its id
-async function publishBlueprint() {
-    let pid = await Fluence.generatePeerId();
-    let cl = await Fluence.connect(relays[1].multiaddr, pid);
-
-    await cl.addModule("sqlite", SQLITE, undefined, 20000);
-    await cl.addModule(HISTORY_NAME, HISTORY, undefined, 20000);
-    await cl.addModule(USER_LIST_NAME, USER_LIST, undefined, 20000);
-
-    let blueprintIdHistory = await cl.addBlueprint("user_list", ["sqlite", HISTORY_NAME])
-    let blueprintIdUserList = await cl.addBlueprint("user_list", ["sqlite", USER_LIST_NAME])
-    console.log(`BLUEPRINT HISTORY ID: ${blueprintIdHistory}`)
-    console.log(`BLUEPRINT USER LIST ID: ${blueprintIdUserList}`)
-}
 
