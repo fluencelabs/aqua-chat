@@ -2,7 +2,7 @@
 
 - Go to `client` directory:
 ```
-cd client
+cd demo
 ```
 
 - Install a project
