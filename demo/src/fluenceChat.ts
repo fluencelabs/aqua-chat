@@ -62,7 +62,7 @@ export class FluenceChat {
                     name = this.members.find(m => m.clientId === v[2])?.name
                 }
                 if (name) {
-                    console.log(`${name}: ${v[1]}`)
+                    console.log(`${decodeURIComponent(name)}: ${decodeURIComponent(v[1])}`)
                 }
             })
 
@@ -78,7 +78,7 @@ export class FluenceChat {
         service.registerFunction("add", (args: any[]) => {
             let m = this.members.find(m => m.clientId === args[0])
             if (m) {
-                console.log(`${m.name}: ${args[1]}`)
+                console.log(`${decodeURIComponent(m.name)}: ${decodeURIComponent(args[1])}`)
             }
             return {}
         })
@@ -91,15 +91,15 @@ export class FluenceChat {
      */
     async join() {
         let script = this.genScript(this.userListId, "join", ["user", "relay", "sig", "name"])
-        let particle = await build(this.client.selfPeerId, script, {user: this.client.selfPeerIdStr, relay: this.client.connection.nodePeerId.toB58String(), sig: this.client.selfPeerIdStr, name: this.name}, 600000)
+        let particle = await build(this.client.selfPeerId, script, {user: this.client.selfPeerIdStr, relay: this.client.connection.nodePeerId.toB58String(), sig: this.client.selfPeerIdStr, name: encodeURIComponent(this.name)}, 600000)
         await this.client.sendParticle(particle)
     }
 
     printMembers() {
         console.log("Members:")
-        console.log(this.name)
+        console.log(encodeURIComponent(this.name))
         this.members.forEach((m) => {
-            console.log(m.name)
+            console.log(encodeURIComponent(m.name))
         })
     }
 
@@ -155,7 +155,7 @@ export class FluenceChat {
     }
 
     private static printNameChanged(oldName: string, name: string) {
-        console.log(`Member '${oldName}' changed name to '${name}'.`)
+        console.log(`Member '${decodeURIComponent(oldName)}' changed name to '${decodeURIComponent(name)}'.`)
     }
 
     private static printRelayChanged(relay: string) {
@@ -166,7 +166,7 @@ export class FluenceChat {
         if (member.clientId !== this.client.selfPeerIdStr) {
             let oldMember = this.members.find((m) => m.clientId === member.clientId)
             if (!oldMember) {
-                console.log(`Member joined: ${member.name}.`)
+                console.log(`Member joined: ${decodeURIComponent(member.name)}.`)
             } else {
                 if (oldMember.name !== member.name) {
                     FluenceChat.printNameChanged(oldMember.name, member.name);
@@ -226,8 +226,8 @@ export class FluenceChat {
      */
     async sendMessage(msg: string) {
         let script = this.genScript(this.historyId, "add", ["author", "msg"])
-        let particle = await build(this.client.selfPeerId, script, {author: this.client.selfPeerIdStr, msg: msg}, 600000)
-        console.log("Me: ", msg)
+        let particle = await build(this.client.selfPeerId, script, {author: this.client.selfPeerIdStr, msg: encodeURIComponent(msg)}, 600000)
+        console.log("Me: ", decodeURIComponent(msg))
         await this.client.sendParticle(particle)
     }
 
