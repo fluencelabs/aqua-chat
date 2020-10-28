@@ -239,6 +239,10 @@ export class FluenceChat {
         console.log(this.getHistoryScript())
     }
 
+    printSendMessageScript() {
+        console.log(this.genScript(this.historyId, "add", ["author", "msg"]))
+    }
+
     /**
      * Generate a script that will pass arguments to remote service and will send notifications to all chat members.
      * @param serviceId service to send
