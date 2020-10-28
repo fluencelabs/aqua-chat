@@ -45,11 +45,15 @@ Fluence.setLogLevel('error')
 console.log(`
 Welcome to Fluence Demo Chat Application
 Use this commands to start:
-let chat = await createChat("Your Name") // create a new chat instance and print your seed and new chat id
-let chat = await joinChat("Your Name", "Chat Id") // join to an existing chat and print your seed
+// create a new chat instance and print your seed and new chat id
+let chat = await createChat("Your Name") 
+// join to an existing chat and print your seed
+let chat = await joinChat("Your Name", "Chat Id") 
 
-chat.sendMessage("Your Message") // send a message to all chat members
-chat.changeName("New Name") // change your name
+// send a message to all chat members
+chat.sendMessage("Your Message")
+// change your name 
+chat.changeName("New Name") 
 
 You can use your seed to reconnect to chat later or from other computer.
 You can use a specific node to connect with.
