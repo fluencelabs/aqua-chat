@@ -55,15 +55,15 @@ chat.sendMessage("Your Message")
 // change your name 
 chat.changeName("New Name") 
 
-You can use your seed to reconnect to chat later or from other computer.
-You can use a specific node to connect with.
+// You can use your seed to reconnect to chat later or from other computer.
+// You can use a specific node to connect with.
 let chat = createChat("Your Name", "SEED", "Node Multiaddr")
 let chat = joinChat("Your Name", "CHAT ID", "SEED", "Node Multiaddr")
 
-You can use preassigned node multiaddresses:
+// You can use preassigned node multiaddresses:
 relays[0..6].multiaddr
 
-You can check some of used Aquamarine scripts:
+// You can check some of used Aquamarine scripts:
 chat.printSendMessageScript()
 chat.printGetHistoryScript()
 chat.printJoinScript()
