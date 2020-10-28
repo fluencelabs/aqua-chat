@@ -1,12 +1,12 @@
-import Fluence from 'fluence/dist/src/fluence';
-import {seedToPeerId} from "fluence/dist/src/seed";
-import {FluenceClient} from "fluence/dist/src/fluenceClient";
-import {Service} from "fluence/dist/src/callService";
-import {build} from "fluence/dist/src/particle";
-import {registerService} from "fluence/dist/src/globalState";
-import {SQLITE} from "../../artifacts/sqlite.ts";
-import {USER_LIST} from "../../artifacts/userList.ts";
-import {HISTORY} from "../../artifacts/history.ts";
+import Fluence from 'fluence/dist/fluence';
+import {seedToPeerId} from "fluence/dist/seed";
+import {FluenceClient} from "fluence/dist/fluenceClient";
+import {Service} from "fluence/dist/callService";
+import {build} from "fluence/dist/particle";
+import {registerService} from "fluence/dist/globalState";
+import {SQLITE_BS64} from "../../artifacts/sqliteBs64";
+import {USER_LIST_BS64} from "../../artifacts/userListBs64";
+import {HISTORY_BS64} from "../../artifacts/historyBs64";
 
 type Relay = { peerId: string; multiaddr: string };
 
@@ -82,37 +82,14 @@ export class AquaClient {
     async sendMessage(pid: string, message: string) {
         let script = `(call (${pid} (chat show_message) (name message) result))`
         let particle = await build(this.client.selfPeerId, script, {name: this.name, message})
-        this.client.sendParticle(particle);
+        await this.client.sendParticle(particle);
     }
 
     async sendScript(script: string, data: object) {
         let particle = await build(this.client.selfPeerId, script, data, 500000)
-        this.client.sendParticle(particle);
+        await this.client.sendParticle(particle);
     }
 }
-
-/*
-        (seq (
-            (call (%current_peer_id% (add_module ||) (module_bytes module_config) module))
-            (seq (
-                (call (%current_peer_id% (add_blueprint ||) (blueprint) blueprint_id))
-                (seq (
-                    (call (%current_peer_id% (create ||) (blueprint_id) service_id))
-                    (call ({} (|| ||) (service_id) client_result))
-                ))
-            ))
-        ))
-
-
-        (seq (
-            (call (%current_peer_id% ({} |greeting|) (my_name) greeting))
-            (call ({} (|| ||) (greeting) client_result))
-        ))
- */
-
-/*
-{"module_bytes":"base64","module_config":{"name":"greeting","mem_pages_count":100,"logger_enabled":true,"wasi":{"envs":{},"preopened_files":["/tmp"],"mapped_dirs":{}}}}
- */
 
 async function getModules() {
     let pid = await Fluence.generatePeerId();
@@ -152,8 +129,8 @@ async function addModules() {
     Fluence.setLogLevel("debug")
     let client = await Fluence.connect(relays[1].multiaddr, pid);
     // await client.addModule("sqlite", SQLITE, 20000)
-    await client.addModule("user-list", USER_LIST)
-    await client.addModule("history", HISTORY)
+    await client.addModule("user-list", USER_LIST_BS64)
+    await client.addModule("history", HISTORY_BS64)
 }
 
 async function init(relay: number, name: string, seed?: string): Promise<AquaClient> {

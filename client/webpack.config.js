@@ -1,4 +1,3 @@
-
 const path = require('path');
 const webpack = require('webpack');
 const CopyWebpackPlugin = require('copy-webpack-plugin')
@@ -7,11 +6,15 @@ module.exports = {
     entry: {
         app: ['./src/index.ts']
     },
+    resolve: {
+        extensions: ['.js', '.ts']
+    },
     devServer: {
         contentBase: './bundle',
         hot: false,
         inline: false,
     },
+    devtool: "eval-source-map",
     module: {
         rules: [
             {

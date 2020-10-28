@@ -2,7 +2,7 @@ import {FluenceClient} from "fluence/dist/fluenceClient";
 import {registerService} from "fluence/dist/globalState";
 import {Service} from "fluence/dist/callService";
 import {build} from "fluence/dist/particle";
-import {CHAT_PEER_ID} from "./index.ts";
+import {CHAT_PEER_ID} from "./index";
 
 export const HISTORY_NAME = "history"
 export const USER_LIST_NAME = "user-list"
@@ -15,7 +15,6 @@ export interface Member {
 }
 
 export class FluenceChat {
-
     client: FluenceClient
     historyId: string
     userListId: string
@@ -35,6 +34,7 @@ export class FluenceChat {
         this.chatPeerId = peerId;
         this.chatId = chatId;
 
+        // register service with function that will handle incoming messages from a chat
         let service = new Service(this.chatId)
         service.registerFunction("join", (args: any[]) => {
             let m;
@@ -86,13 +86,27 @@ export class FluenceChat {
         registerService(service)
     }
 
+    /**
+     * Call 'join' service and send notifications to all members.
+     */
     async join() {
         let script = this.genScript(this.userListId, "join", ["user", "relay", "sig", "name"])
         let particle = await build(this.client.selfPeerId, script, {user: this.client.selfPeerIdStr, relay: this.client.connection.nodePeerId.toB58String(), sig: this.client.selfPeerIdStr, name: this.name}, 600000)
         await this.client.sendParticle(particle)
     }
 
-    async getMembers() {
+    printMembers() {
+        console.log("Members:")
+        console.log(this.name)
+        this.members.forEach((m) => {
+            console.log(m.name)
+        })
+    }
+
+    /**
+     * Send all members one by one itself by script.
+     */
+    async updateMembers() {
         let chatPeerId = CHAT_PEER_ID;
         let relay = this.client.connection.nodePeerId.toB58String();
         let script = `
@@ -117,6 +131,10 @@ export class FluenceChat {
         await this.client.sendParticle(particle)
     }
 
+    /**
+     * Rejoin with another name.
+     * @param name
+     */
     async changeName(name: string) {
         this.name = name;
         await this.join();
@@ -136,12 +154,12 @@ export class FluenceChat {
         this.members = this.members.filter(m => m.clientId !== clientId)
     }
 
-    printNameChanged(oldName: string, name: string) {
+    private static printNameChanged(oldName: string, name: string) {
         console.log(`Member '${oldName}' changed name to '${name}'.`)
     }
 
-    printRelayChanged(name: string) {
-        console.log(`Member '${name}' changed its relay address.`)
+    private static printRelayChanged(relay: string) {
+        console.log(`Member '${relay}' changed its relay address.'.`)
     }
 
     private addMember(member: Member) {
@@ -151,11 +169,11 @@ export class FluenceChat {
                 console.log(`Member joined: ${member.name}.`)
             } else {
                 if (oldMember.name !== member.name) {
-                    this.printNameChanged(oldMember.name, member.name);
+                    FluenceChat.printNameChanged(oldMember.name, member.name);
                 }
 
                 if (oldMember.relay !== member.relay) {
-                    this.printRelayChanged(member.name)
+                    FluenceChat.printRelayChanged(member.relay)
                 }
             }
             this.members = this.members.filter(m => m.clientId !== member.clientId)
@@ -163,6 +181,9 @@ export class FluenceChat {
         }
     }
 
+    /**
+     * Quit from chat.
+     */
     async quit() {
         let user = this.client.selfPeerIdStr;
         let script = this.genScript(this.historyId, "delete", ["user", "signature"])
@@ -172,26 +193,37 @@ export class FluenceChat {
         console.log("You left chat.")
     }
 
-    async getHistory(): Promise<any> {
+    private getHistoryScript(): string {
         let chatPeerId = CHAT_PEER_ID;
         let relay = this.client.connection.nodePeerId.toB58String();
-        let script = `
-                (seq (
-                    (call ("${relay}" ("identity" "") () void1[]))
-                    (seq (
-                        (call ("${chatPeerId}" ("${this.historyId}" "get_all") () messages))                       
-                        (seq (
-                            (call ("${relay}" ("identity" "") () void[]))
-                            (call ("${this.client.selfPeerIdStr}" ("${this.chatId}" "all_msgs") (messages) void3[]))                            
-                        ))                                                                           
-                    ))
-                ))
-                `
 
+        return `
+(seq (
+    (call ("${relay}" ("identity" "") () void1[]))
+    (seq (
+        (call ("${chatPeerId}" ("${this.historyId}" "get_all") () messages))                       
+        (seq (
+            (call ("${relay}" ("identity" "") () void[]))
+            (call ("${this.client.selfPeerIdStr}" ("${this.chatId}" "all_msgs") (messages) void3[]))                            
+        ))                                                                           
+    ))
+))
+        `
+    }
+
+    /**
+     * Print all history to a console.
+     */
+    async getHistory(): Promise<any> {
+        let script = this.getHistoryScript();
         let particle = await build(this.client.selfPeerId, script, {}, 600000)
         await this.client.sendParticle(particle)
     }
 
+    /**
+     * Send message to chat. Notice all connected members.
+     * @param msg
+     */
     async sendMessage(msg: string) {
         let script = this.genScript(this.historyId, "add", ["author", "msg"])
         let particle = await build(this.client.selfPeerId, script, {author: this.client.selfPeerIdStr, msg: msg}, 600000)
@@ -199,29 +231,43 @@ export class FluenceChat {
         await this.client.sendParticle(particle)
     }
 
-    genScript(serviceId: string, funcName: string, args: string[]): string {
+    printJoinScript() {
+        console.log(this.genScript(this.userListId, "join", ["user", "relay", "sig", "name"]))
+    }
+
+    printGetHistoryScript() {
+        console.log(this.getHistoryScript())
+    }
+
+    /**
+     * Generate a script that will pass arguments to remote service and will send notifications to all chat members.
+     * @param serviceId service to send
+     * @param funcName function to call
+     * @param args
+     */
+    private genScript(serviceId: string, funcName: string, args: string[]): string {
         let argsStr = args.join(" ")
         let chatPeerId = CHAT_PEER_ID
         let relay = this.client.connection.nodePeerId.toB58String();
         return `
-                (seq (
-                    (call ("${relay}" ("identity" "") () void1[]))
+(seq (
+    (call ("${relay}" ("identity" "") () void1[]))
+    (seq (
+        (call ("${chatPeerId}" ("${serviceId}" "${funcName}") (${argsStr}) void2[]))
+        (seq (
+            (call ("${chatPeerId}" ("${this.userListId}" "get_users") () members))
+            (fold (members m
+                (par (
                     (seq (
-                        (call ("${chatPeerId}" ("${serviceId}" "${funcName}") (${argsStr}) void2[]))
-                        (seq (
-                            (call ("${chatPeerId}" ("${this.userListId}" "get_users") () members))
-                            (fold (members m
-                                (par (
-                                    (seq (
-                                        (call (m.$.[1] ("identity" "") () void[]))
-                                        (call (m.$.[0] ("${this.chatId}" "${funcName}") (${argsStr}) void3[]))                            
-                                    ))                        
-                                    (next m)
-                                ))                   
-                            ))
-                        ))
-                    ))
-                ))
+                        (call (m.$.[1] ("identity" "") () void[]))
+                        (call (m.$.[0] ("${this.chatId}" "${funcName}") (${argsStr}) void3[]))                            
+                    ))                        
+                    (next m)
+                ))                   
+            ))
+        ))
+    ))
+))
                 `
     }
 }
