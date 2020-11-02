@@ -3,8 +3,8 @@ import Fluence from "fluence/dist/fluence";
 import {createChat, currentChat, joinChat, publishBlueprint} from "./globalFunctions";
 
 // change these constants in different environment
-export const HISTORY_BLUEPRINT = "f896116b-89a4-4fc2-989e-5105a32ac079";
-export const USER_LIST_BLUEPRINT = "9e0d25a2-0314-4894-be71-db83b0147b7e";
+export const HISTORY_BLUEPRINT = "3a7860ec-c7e3-46de-be48-2e02a4f01690";
+export const USER_LIST_BLUEPRINT = "0bec7cba-f9db-4b71-87d6-b4003bdd20eb";
 
 // parameters from `fluence-playground` local network
 export let relays = [

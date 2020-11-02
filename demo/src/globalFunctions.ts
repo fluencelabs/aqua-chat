@@ -29,8 +29,8 @@ function getRandomRelayAddr(): string {
 export async function createChat(name: string, seed?: string, relayAddress?: string): Promise<FluenceChat> {
     checkCurrentChat();
     let clCreation = await connect(relays[1].multiaddr, false);
-    let userListIdPr = clCreation.createService(USER_LIST_BLUEPRINT);
-    let historyIdPr = clCreation.createService(HISTORY_BLUEPRINT);
+    let userListIdPr = clCreation.createService(USER_LIST_BLUEPRINT, undefined, 20000);
+    let historyIdPr = clCreation.createService(HISTORY_BLUEPRINT, undefined, 20000);
 
     let userListId = await userListIdPr;
     let historyId = await historyIdPr;
