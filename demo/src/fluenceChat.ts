@@ -1,6 +1,6 @@
 import {FluenceClient} from "fluence/dist/fluenceClient";
 import {registerService} from "fluence/dist/globalState";
-import {Service} from "fluence/dist/callService";
+import {Service} from "fluence/dist/service";
 import {build} from "fluence/dist/particle";
 import {CHAT_PEER_ID} from "./index";
 
@@ -91,7 +91,14 @@ export class FluenceChat {
      */
     async join() {
         let script = this.genScript(this.userListId, "join", ["user", "relay", "sig", "name"])
-        let particle = await build(this.client.selfPeerId, script, {user: this.client.selfPeerIdStr, relay: this.client.connection.nodePeerId.toB58String(), sig: this.client.selfPeerIdStr, name: encodeURIComponent(this.name)}, 600000)
+
+        let data = new Map()
+        data.set("user", this.client.selfPeerIdStr)
+        data.set("relay", this.client.connection.nodePeerId.toB58String())
+        data.set("sig", this.client.selfPeerIdStr)
+        data.set("name", encodeURIComponent(this.name))
+
+        let particle = await build(this.client.selfPeerId, script, data, 600000)
         await this.client.sendParticle(particle)
     }
 
@@ -127,7 +134,7 @@ export class FluenceChat {
                 ))
                 `
 
-        let particle = await build(this.client.selfPeerId, script, {}, 600000)
+        let particle = await build(this.client.selfPeerId, script, new Map(), 600000)
         await this.client.sendParticle(particle)
     }
 
@@ -187,7 +194,12 @@ export class FluenceChat {
     async quit() {
         let user = this.client.selfPeerIdStr;
         let script = this.genScript(this.historyId, "delete", ["user", "signature"])
-        let particle = await build(this.client.selfPeerId, script, {user, signature: user}, 600000)
+
+        let data = new Map()
+        data.set("user", user)
+        data.set("signature", user)
+
+        let particle = await build(this.client.selfPeerId, script, data, 600000)
         await this.client.sendParticle(particle)
 
         console.log("You left chat.")
@@ -216,7 +228,7 @@ export class FluenceChat {
      */
     async getHistory(): Promise<any> {
         let script = this.getHistoryScript();
-        let particle = await build(this.client.selfPeerId, script, {}, 600000)
+        let particle = await build(this.client.selfPeerId, script, new Map(), 600000)
         await this.client.sendParticle(particle)
     }
 
@@ -226,8 +238,11 @@ export class FluenceChat {
      */
     async sendMessage(msg: string) {
         let script = this.genScript(this.historyId, "add", ["author", "msg"])
-        let particle = await build(this.client.selfPeerId, script, {author: this.client.selfPeerIdStr, msg: encodeURIComponent(msg)}, 600000)
-        console.log("Me: ", decodeURIComponent(msg))
+        let data = new Map()
+        data.set("author", this.client.selfPeerIdStr)
+        data.set("msg", encodeURIComponent(msg))
+
+        let particle = await build(this.client.selfPeerId, script, data, 600000)
         await this.client.sendParticle(particle)
     }
 
