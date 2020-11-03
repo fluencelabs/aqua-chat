@@ -117,21 +117,21 @@ export class FluenceChat {
         let chatPeerId = CHAT_PEER_ID;
         let relay = this.client.connection.nodePeerId.toB58String();
         let script = `
-                (seq (
-                    (call ("${relay}" ("identity" "") () void1[]))
-                    (seq (
-                        (call ("${chatPeerId}" ("${this.userListId}" "get_users") () members))
-                        (fold (members m
-                            (par (
-                                (seq (
-                                    (call ("${relay}" ("identity" "") () void[]))
-                                    (call ("${this.client.selfPeerIdStr}" ("${this.chatId}" "join") (m) void3[]))                            
-                                ))                        
+                (seq
+                    (call "${relay}" ("identity" "") [] void1[])
+                    (seq
+                        (call "${chatPeerId}" ("${this.userListId}" "get_users") [] members)
+                        (fold members m
+                            (par
+                                (seq
+                                    (call "${relay}" ("identity" "") [] void[])
+                                    (call "${this.client.selfPeerIdStr}" ("${this.chatId}" "join") [m] void3[])                            
+                                )                        
                                 (next m)
-                            ))    
-                        ))               
-                    ))
-                ))
+                            )    
+                        )               
+                    )
+                )
                 `
 
         let particle = await build(this.client.selfPeerId, script, new Map(), 600000)
@@ -210,16 +210,16 @@ export class FluenceChat {
         let relay = this.client.connection.nodePeerId.toB58String();
 
         return `
-(seq (
-    (call ("${relay}" ("identity" "") () void1[]))
-    (seq (
-        (call ("${chatPeerId}" ("${this.historyId}" "get_all") () messages))                       
-        (seq (
-            (call ("${relay}" ("identity" "") () void[]))
-            (call ("${this.client.selfPeerIdStr}" ("${this.chatId}" "all_msgs") (messages) void3[]))                            
-        ))                                                                           
-    ))
-))
+(seq
+    (call "${relay}" ("identity" "") [] void1[])
+    (seq
+        (call "${chatPeerId}" ("${this.historyId}" "get_all") [] messages)                       
+        (seq
+            (call "${relay}" ("identity" "") [] void[])
+            (call "${this.client.selfPeerIdStr}" ("${this.chatId}" "all_msgs") [messages] void3[])                            
+        )                                                                           
+    )
+)
         `
     }
 
@@ -269,24 +269,24 @@ export class FluenceChat {
         let chatPeerId = CHAT_PEER_ID
         let relay = this.client.connection.nodePeerId.toB58String();
         return `
-(seq (
-    (call ("${relay}" ("identity" "") () void1[]))
-    (seq (
-        (call ("${chatPeerId}" ("${serviceId}" "${funcName}") (${argsStr}) void2[]))
-        (seq (
-            (call ("${chatPeerId}" ("${this.userListId}" "get_users") () members))
-            (fold (members m
-                (par (
-                    (seq (
-                        (call (m.$.[1] ("identity" "") () void[]))
-                        (call (m.$.[0] ("${this.chatId}" "${funcName}") (${argsStr}) void3[]))                            
-                    ))                        
+(seq
+    (call "${relay}" ("identity" "") [] void1[])
+    (seq
+        (call "${chatPeerId}" ("${serviceId}" "${funcName}") [${argsStr}] void2[])
+        (seq
+            (call "${chatPeerId}" ("${this.userListId}" "get_users") [] members)
+            (fold members m
+                (par 
+                    (seq 
+                        (call m.$.[1] ("identity" "") [] void[])
+                        (call m.$.[0] ("${this.chatId}" "${funcName}") [${argsStr}] void3[])                            
+                    )                        
                     (next m)
-                ))                   
-            ))
-        ))
-    ))
-))
+                )                
+            )
+        )
+    )
+)
                 `
     }
 }
