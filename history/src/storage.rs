@@ -64,8 +64,8 @@ pub fn get_all_msgs() -> Vec<Message> {
                 u32::max_value()
             }
         };
-        let author = next("author")?;
         let body = next("body")?;
+        let author = next("author")?;
         let reply_to = next("reply_to").unwrap_or("0".to_string());
         let reply_to = match reply_to.parse::<u32>() {
             Ok(id) => id,
