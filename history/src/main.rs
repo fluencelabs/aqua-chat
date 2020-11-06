@@ -28,8 +28,8 @@ pub fn main() {
 }
 
 #[fce]
-fn add(author: String, msg: String) -> String {
-    add_msg(msg, author)
+fn add(author: String, msg: String, reply_to: u32) -> String {
+    add_msg(msg, author, reply_to)
 }
 
 #[fce]

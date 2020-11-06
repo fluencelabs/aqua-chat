@@ -21,19 +21,20 @@ pub struct Message {
     pub id: u32,
     pub author: String,
     pub body: String,
+    pub reply_to: u32,
 }
 
 pub fn init() {
     unsafe {
-        invoke("CREATE TABLE IF NOT EXISTS history(msg_id INTEGER PRIMARY KEY, msg TEXT NOT NULL, author TEXT NOT NULL);".to_string());
+        invoke("CREATE TABLE IF NOT EXISTS history(msg_id INTEGER PRIMARY KEY, msg TEXT NOT NULL, author TEXT NOT NULL, reply_to INTEGER);".to_string());
     }
 }
 
-pub fn add_msg(msg: String, author: String) -> String {
+pub fn add_msg(msg: String, author: String, reply_to: u32) -> String {
     unsafe {
         invoke(format!(
-            "INSERT INTO history (msg,author) VALUES ('{}','{}')",
-            msg, author
+            "INSERT INTO history (msg,author,reply_to) VALUES ('{}','{}', {})",
+            msg, author, reply_to
         ))
     }
 }
@@ -63,10 +64,21 @@ pub fn get_all_msgs() -> Vec<Message> {
                 u32::max_value()
             }
         };
+        let author = next("author")?;
+        let body = next("body")?;
+        let reply_to = next("reply_to").unwrap_or("0".to_string());
+        let reply_to = match reply_to.parse::<u32>() {
+            Ok(id) => id,
+            Err(err) => {
+                log::warn!("message.id isn't a number {}: {:?}", id, err);
+                u32::max_value()
+            }
+        };
         Some(Message {
             id,
-            author: next("author")?,
-            body: next("body")?
+            author,
+            body,
+            reply_to
         })
     }).collect()
 }
