@@ -2,9 +2,9 @@
 # It is not intended for manual editing.
 [[package]]
 name = "anyhow"
-version = "1.0.33"
+version = "1.0.34"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a1fd36ffbb1fb7c834eac128ea8d0e310c5aeb635548f9d58861e1308d46e71c"
+checksum = "bf8dcb5b4bbaa28653b647d8c77bd4ed40183b48882e130c1f1ffb73de069fd7"
 
 [[package]]
 name = "cfg-if"
@@ -15,7 +15,7 @@ checksum = "4785bdd1c96b2a846b2bd7cc02e86b6b3dbf14e7e53446c4f54c92a361040822"
 [[package]]
 name = "fluence"
 version = "0.2.8"
-source = "git+https://github.com/fluencelabs/rust-sdk#8c0a02916519872c3d6073de16c950d10da0b2f4"
+source = "git+https://github.com/fluencelabs/rust-sdk#a6c587db0b6f22c3d3af81f10b187f148f8e9d30"
 dependencies = [
  "fluence-sdk-macro",
  "fluence-sdk-main",
@@ -24,7 +24,7 @@ dependencies = [
 [[package]]
 name = "fluence-sdk-macro"
 version = "0.2.8"
-source = "git+https://github.com/fluencelabs/rust-sdk#8c0a02916519872c3d6073de16c950d10da0b2f4"
+source = "git+https://github.com/fluencelabs/rust-sdk#a6c587db0b6f22c3d3af81f10b187f148f8e9d30"
 dependencies = [
  "fluence-sdk-wit",
 ]
@@ -32,7 +32,7 @@ dependencies = [
 [[package]]
 name = "fluence-sdk-main"
 version = "0.2.8"
-source = "git+https://github.com/fluencelabs/rust-sdk#8c0a02916519872c3d6073de16c950d10da0b2f4"
+source = "git+https://github.com/fluencelabs/rust-sdk#a6c587db0b6f22c3d3af81f10b187f148f8e9d30"
 dependencies = [
  "fluence-sdk-macro",
  "log",
@@ -42,7 +42,7 @@ dependencies = [
 [[package]]
 name = "fluence-sdk-wit"
 version = "0.2.8"
-source = "git+https://github.com/fluencelabs/rust-sdk#8c0a02916519872c3d6073de16c950d10da0b2f4"
+source = "git+https://github.com/fluencelabs/rust-sdk#a6c587db0b6f22c3d3af81f10b187f148f8e9d30"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -86,9 +86,9 @@ dependencies = [
 
 [[package]]
 name = "ppv-lite86"
-version = "0.2.9"
+version = "0.2.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c36fa947111f5c62a733b652544dd0016a43ce89619538a8ef92724a6f501a20"
+checksum = "ac74c624d6b2d21f425f752262f42188365d7b8ff1aff74c82e45136510a4857"
 
 [[package]]
 name = "proc-macro2"

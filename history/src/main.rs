@@ -23,7 +23,11 @@ use crate::storage::{add_msg, init, get_all_msgs, get_msg, Message};
 const OWNER: &str = "OWNER";
 
 pub fn main() {
-    WasmLogger::init_with_level(log::Level::Info).unwrap();
+    WasmLogger::new()
+        .with_log_level(log::Level::Info)
+        .with_target_map(<_>::default())
+        .build()
+        .unwrap();
     init();
 }
 
