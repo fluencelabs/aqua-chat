@@ -32,7 +32,7 @@ pub fn main() {
 }
 
 #[fce]
-fn add(author: String, msg: String, reply_to: u32) -> String {
+fn add(author: String, msg: String, reply_to: u32) -> u32 {
     add_msg(msg, author, reply_to)
 }
 

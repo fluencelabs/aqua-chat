@@ -30,13 +30,24 @@ pub fn init() {
     }
 }
 
-pub fn add_msg(msg: String, author: String, reply_to: u32) -> String {
-    unsafe {
+pub fn add_msg(msg: String, author: String, reply_to: u32) -> u32 {
+    let id = unsafe {
         invoke(format!(
             "INSERT INTO history (msg,author,reply_to) VALUES ('{}','{}', {})",
             msg, author, reply_to
+        ));
+        invoke(format!(
+            "select last_insert_rowid();"
         ))
-    }
+    };
+    let id = match id.parse::<u32>() {
+        Ok(id) => id,
+        Err(err) => {
+            log::warn!("message.id isn't a number {}: {:?}", id, err);
+            u32::max_value()
+        }
+    };
+    id
 }
 
 pub fn get_msg(limit: u64) -> String {
