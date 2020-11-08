@@ -14,24 +14,14 @@
  * limitations under the License.
  */
 
-mod errors;
-mod service_api;
-mod storage_api;
-mod user;
+use fluence::fce;
 
-use fluence::WasmLogger;
-use storage_api::init;
-
-pub(crate) type Result<T> = std::result::Result<T, errors::UserListError>;
-
-pub fn main() {
-    WasmLogger::new()
-        .with_log_level(log::Level::Info)
-        .build()
-        .unwrap();
-
-    match init() {
-        Ok(_) => log::info!("db created"),
-        Err(e) => log::error!("sqlite db creation failed: {}", e),
-    }
+#[fce]
+pub struct User {
+    pub peer_id: String,
+    pub relay_id: String,
+    pub signature: String,
+    pub name: String,
 }
+
+pub(crate) const USER_FIELDS_COUNT: usize = 4;
