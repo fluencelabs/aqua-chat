@@ -1,0 +1,47 @@
+version: 2.1
+jobs:
+  fce:
+    docker:
+      - image: circleci/rust:latest
+    environment:
+      RUST_BACKTRACE: 1
+      #RUST_TEST_THREADS: 1
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - service01-{{ checksum "services/history/Cargo.lock" }}-{{ checksum "services/user-list/Cargo.lock" }}
+      - run: |
+          rustup toolchain install nightly
+          rustup component add rustfmt
+          rustup component add clippy --toolchain nightly
+          rustup target add wasm32-wasi
+
+          cargo install fcli
+
+          ./build.sh
+
+          cd services/history
+          cargo fmt --all -- --check --color always
+          cargo +nightly check -v --all-features
+          cargo +nightly clippy -v
+
+          cd ../user-list
+          cargo fmt --all -- --check --color always
+          cargo +nightly check -v --all-features
+          cargo +nightly clippy -v
+
+          cd ../tests
+          cargo +nightly test --release -v --all-features
+
+      - save_cache:
+          paths:
+            - ~/.cargo
+            - ~/.rustup
+          key: service01-{{ checksum "services/history/Cargo.lock" }}-{{ checksum "services/user-list/Cargo.lock" }}
+
+workflows:
+  version: 2.1
+  fce:
+    jobs:
+      - services

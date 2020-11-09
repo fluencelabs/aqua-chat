@@ -44,10 +44,10 @@ pub fn init() -> Result<()> {
     SQLITE.execute(init_sql).map_err(Into::into)
 }
 
-pub fn user_exists(user_name: String) -> Result<bool> {
+pub fn user_exists(peer_id: String) -> Result<bool> {
     let prepare_sql = "SELECT * FROM users WHERE peer_id = ?";
     let mut cursor = SQLITE.prepare(prepare_sql)?.cursor();
-    cursor.bind(&[VString(user_name)])?;
+    cursor.bind(&[VString(peer_id)])?;
 
     let user = cursor.next()?;
     Ok(user.is_some())

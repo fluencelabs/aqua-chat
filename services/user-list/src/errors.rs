@@ -16,7 +16,7 @@
 
 use crate::service_api::EmptyServiceResult;
 use crate::service_api::ExistsServiceResult;
-use crate::service_api::JoinServiceResult;
+use crate::service_api::GetUsersServiceResult;
 use crate::user::User;
 use crate::Result;
 
@@ -100,7 +100,7 @@ impl From<Result<()>> for EmptyServiceResult {
     }
 }
 
-impl From<Result<Vec<User>>> for JoinServiceResult {
+impl From<Result<Vec<User>>> for GetUsersServiceResult {
     fn from(result: Result<Vec<User>>) -> Self {
         match result {
             Ok(users) => Self {

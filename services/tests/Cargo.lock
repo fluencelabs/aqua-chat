@@ -316,15 +316,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "fce-sqlite-connector"
-version = "0.1.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8165090ee52453a5c14bd42212bfc6516860c4aaa2315fd568c0198b46b52901"
-dependencies = [
- "fluence 0.2.9 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
 name = "fce-utils"
 version = "0.1.0"
 source = "git+https://github.com/fluencelabs/fce#e24bb8e1ac503cdde9b1397a34ebced0132feaf1"
@@ -351,25 +342,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "fluence"
-version = "0.2.9"
-source = "git+https://github.com/fluencelabs/rust-sdk#fd9672636e8d7a91275e5e0b8b88a34494336e5a"
-dependencies = [
- "fluence-sdk-macro 0.2.9 (git+https://github.com/fluencelabs/rust-sdk)",
- "fluence-sdk-main 0.2.9 (git+https://github.com/fluencelabs/rust-sdk)",
-]
-
-[[package]]
-name = "fluence"
-version = "0.2.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1099731bb64286758969fb8dd6f903d1e4a7398d8e63bdec1be6387576f4d8ab"
-dependencies = [
- "fluence-sdk-macro 0.2.9 (registry+https://github.com/rust-lang/crates.io-index)",
- "fluence-sdk-main 0.2.9 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
 name = "fluence-app-service"
 version = "0.1.12"
 source = "git+https://github.com/fluencelabs/fce#e24bb8e1ac503cdde9b1397a34ebced0132feaf1"
@@ -392,7 +364,7 @@ dependencies = [
  "cmd_lib",
  "fce",
  "fce-utils",
- "fluence-sdk-main 0.2.9 (registry+https://github.com/rust-lang/crates.io-index)",
+ "fluence-sdk-main",
  "itertools",
  "log",
  "safe-transmute",
@@ -409,28 +381,10 @@ dependencies = [
 [[package]]
 name = "fluence-sdk-macro"
 version = "0.2.9"
-source = "git+https://github.com/fluencelabs/rust-sdk#fd9672636e8d7a91275e5e0b8b88a34494336e5a"
-dependencies = [
- "fluence-sdk-wit 0.2.9 (git+https://github.com/fluencelabs/rust-sdk)",
-]
-
-[[package]]
-name = "fluence-sdk-macro"
-version = "0.2.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ca5ffdf0ccf817b1e4e8438f6da7e8fa024679c706a69bde7aa8cad8b43e90ee"
 dependencies = [
- "fluence-sdk-wit 0.2.9 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "fluence-sdk-main"
-version = "0.2.9"
-source = "git+https://github.com/fluencelabs/rust-sdk#fd9672636e8d7a91275e5e0b8b88a34494336e5a"
-dependencies = [
- "fluence-sdk-macro 0.2.9 (git+https://github.com/fluencelabs/rust-sdk)",
- "log",
- "serde",
+ "fluence-sdk-wit",
 ]
 
 [[package]]
@@ -439,22 +393,9 @@ version = "0.2.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d4f81c3778c18d372fec6d96049f25e29fc4ff7ba4ab65ef4c2285f971e8670a"
 dependencies = [
- "fluence-sdk-macro 0.2.9 (registry+https://github.com/rust-lang/crates.io-index)",
+ "fluence-sdk-macro",
  "log",
  "serde",
-]
-
-[[package]]
-name = "fluence-sdk-wit"
-version = "0.2.9"
-source = "git+https://github.com/fluencelabs/rust-sdk#fd9672636e8d7a91275e5e0b8b88a34494336e5a"
-dependencies = [
- "proc-macro2",
- "quote",
- "serde",
- "serde_json",
- "syn",
- "uuid",
 ]
 
 [[package]]
@@ -752,12 +693,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "once_cell"
-version = "1.4.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "260e51e7efe62b592207e9e13a68e43692a7a279171d6ba57abd208bf23645ad"
-
-[[package]]
 name = "page_size"
 version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1008,6 +943,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "services-test"
+version = "0.1.0"
+dependencies = [
+ "fluence-app-service",
+ "serde",
+ "serde_json",
+ "uuid",
+]
+
+[[package]]
 name = "smallvec"
 version = "1.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1123,21 +1068,6 @@ name = "unicode-xid"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f7fe0bb3479651439c9112f72b6c505038574c9fbb575ed1bf3b797fa39dd564"
-
-[[package]]
-name = "user-list"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "boolinator",
- "fce-sqlite-connector",
- "fluence 0.2.9 (git+https://github.com/fluencelabs/rust-sdk)",
- "fluence-app-service",
- "log",
- "once_cell",
- "serde_json",
- "uuid",
-]
 
 [[package]]
 name = "uuid"

@@ -23,14 +23,14 @@ const OWNER: &str = "owner_id";
 pub const SUCCESS_CODE: i32 = 0;
 
 #[fce]
-pub struct JoinServiceResult {
+pub struct GetUsersServiceResult {
     pub ret_code: i32,
     pub err_msg: String,
     pub users: Vec<User>,
 }
 
 #[fce]
-fn get_users() -> JoinServiceResult {
+fn get_users() -> GetUsersServiceResult {
     get_all_users().into()
 }
 
@@ -66,15 +66,15 @@ fn change_relay(user_name: String, relay: String, signature: String) -> EmptySer
 }
 
 #[fce]
-fn delete(user_name: String, signature: String) -> EmptyServiceResult {
-    fn delete_impl(user_name: String, signature: String) -> Result<()> {
+fn delete(peer_id: String, signature: String) -> EmptyServiceResult {
+    fn delete_impl(peer_id: String, signature: String) -> Result<()> {
         let owner = std::env::var(OWNER).unwrap_or_else(|_| "".to_string());
-        is_authenticated(user_name.clone(), &signature, Some(owner))?;
+        is_authenticated(peer_id.clone(), &signature, Some(owner))?;
 
-        delete_user(user_name)
+        delete_user(peer_id)
     };
 
-    delete_impl(user_name, signature).into()
+    delete_impl(peer_id, signature).into()
 }
 
 #[fce]
@@ -95,8 +95,8 @@ fn is_authenticated(user_name: String, signature: &str, owner: Option<String>) -
 
     user_exists(user_name.clone())?.ok_or_else(|| UserNotExist(user_name.clone()))?;
     match owner {
-        Some(owner) => check_signature(user_name, owner),
-        None => check_signature(user_name, signature)
+        Some(owner) => check_signature(owner, signature),
+        None => check_signature(user_name, signature),
     }
 }
 
