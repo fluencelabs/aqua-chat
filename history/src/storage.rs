@@ -95,7 +95,7 @@ pub fn get_all_msgs() -> Vec<Message> {
 }
 
 #[fce]
-#[link(wasm_import_module = "sqlite")]
+#[link(wasm_import_module = "sqlite3")]
 extern "C" {
     #[link_name = "invoke"]
     pub fn invoke(cmd: String) -> String;

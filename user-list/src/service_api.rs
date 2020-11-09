@@ -48,7 +48,7 @@ fn join(user: User) -> EmptyServiceResult {
 #[fce]
 fn change_name(user_name: String, new_user_name: String, signature: String) -> EmptyServiceResult {
     fn change_name_impl(user_name: String, new_user_name: String, signature: String) -> Result<()> {
-        is_authenticated(user_name.clone(), &signature)?;
+        is_authenticated(user_name.clone(), &signature, None)?;
         update_name(user_name, new_user_name)
     };
 
@@ -58,7 +58,7 @@ fn change_name(user_name: String, new_user_name: String, signature: String) -> E
 #[fce]
 fn change_relay(user_name: String, relay: String, signature: String) -> EmptyServiceResult {
     fn change_relay_impl(user_name: String, relay: String, signature: String) -> Result<()> {
-        is_authenticated(user_name.clone(), &signature)?;
+        is_authenticated(user_name.clone(), &signature, None)?;
         update_relay(user_name, relay, signature)
     };
 
@@ -68,14 +68,9 @@ fn change_relay(user_name: String, relay: String, signature: String) -> EmptySer
 #[fce]
 fn delete(user_name: String, signature: String) -> EmptyServiceResult {
     fn delete_impl(user_name: String, signature: String) -> Result<()> {
-        use crate::errors::UserListError::InvalidSignature;
-
         let owner = std::env::var(OWNER).unwrap_or_else(|_| "".to_string());
-        if owner != signature {
-            return Err(InvalidSignature(user_name, signature));
-        }
+        is_authenticated(user_name.clone(), &signature, Some(owner))?;
 
-        is_authenticated(user_name.clone(), &signature)?;
         delete_user(user_name)
     };
 
@@ -94,18 +89,23 @@ fn is_exists(user_name: String) -> ExistsServiceResult {
     user_exists(user_name).into()
 }
 
-fn is_authenticated(user_name: String, signature: &str) -> Result<()> {
+fn is_authenticated(user_name: String, signature: &str, owner: Option<String>) -> Result<()> {
     use crate::errors::UserListError::UserNotExist;
     use boolinator::Boolinator;
 
     user_exists(user_name.clone())?.ok_or_else(|| UserNotExist(user_name.clone()))?;
-    check_signature(&user_name, signature)
+    match owner {
+        Some(owner) => check_signature(user_name, owner),
+        None => check_signature(user_name, signature)
+    }
 }
 
-fn check_signature(user: &str, signature: &str) -> Result<()> {
+fn check_signature(user: impl AsRef<str>, signature: impl AsRef<str>) -> Result<()> {
     use crate::errors::UserListError::InvalidSignature;
     use boolinator::Boolinator;
 
+    let user = user.as_ref();
+    let signature = signature.as_ref();
     // TODO: implement signature verification
     (user == signature).ok_or_else(|| InvalidSignature(user.to_string(), signature.to_string()))
 }

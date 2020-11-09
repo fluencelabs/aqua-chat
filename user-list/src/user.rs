@@ -17,6 +17,7 @@
 use fluence::fce;
 
 #[fce]
+#[derive(Clone, Debug, Default, Eq, PartialEq, Hash)]
 pub struct User {
     pub peer_id: String,
     pub relay_id: String,

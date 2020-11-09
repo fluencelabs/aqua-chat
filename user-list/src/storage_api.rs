@@ -103,6 +103,7 @@ pub fn get_all_users() -> Result<Vec<User>> {
 }
 
 pub fn add_user(user: User) -> Result<()> {
+    // TODO: do we really need replace here?
     let add_user_sql = "REPLACE INTO users (peer_id,relay,sig,name) VALUES (?, ?, ?, ?)";
     let raw_user = &[
         VString(user.peer_id),
