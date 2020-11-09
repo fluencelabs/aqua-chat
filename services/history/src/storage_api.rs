@@ -55,7 +55,7 @@ pub fn init() -> Result<()> {
     SQLITE.execute(init_sql).map_err(Into::into)
 }
 
-pub fn add_msg(msg: String, author: String, reply_to: i64) -> Result<i64> {
+pub fn add_message(msg: String, author: String, reply_to: i64) -> Result<i64> {
     use crate::errors::HistoryError::InternalError;
 
     let add_msg_sql = "INSERT INTO history (msg, author, reply_to) VALUES (?, ?, ?)";
@@ -74,29 +74,27 @@ pub fn add_msg(msg: String, author: String, reply_to: i64) -> Result<i64> {
     value_to_integer(raw_id)
 }
 
-pub fn get_msg(limit: i64) -> Result<String> {
-    let get_msg_sql = "SELECT * FROM history ORDER BY msg_id DESC LIMIT ?";
+pub fn get_messages_with_limit(limit: i64) -> Result<Vec<Message>> {
+    let get_message_sql = "SELECT * FROM history ORDER BY msg_id DESC LIMIT ?";
 
-    let mut cursor = SQLITE.prepare(get_msg_sql)?.cursor();
-    cursor.bind(&[VInteger(limit)])?;
-
-    let raw_msg = match cursor.next()? {
-        Some(values) => values,
-        None => return Ok(String::new()),
-    };
-
-    value_to_string(raw_msg.first().unwrap())
+    get_messages(get_message_sql, &[VInteger(limit)])
 }
 
-pub fn get_all_msgs() -> Result<Vec<Message>> {
+pub fn get_all_messages() -> Result<Vec<Message>> {
+    let get_all_messages_sql = "SELECT * FROM history";
+
+    get_messages(get_all_messages_sql, &[])
+}
+
+fn get_messages(sql: &str, bind_values: &[Value]) -> Result<Vec<Message>> {
     use crate::errors::HistoryError::CorruptedMessage;
     use crate::message::MESSAGE_FIELDS_COUNT;
 
-    let get_all_msgs_sql = "SELECT * FROM history";
-    let mut get_all_msgs_cursor = SQLITE.prepare(get_all_msgs_sql)?.cursor();
+    let mut get_msgs_cursor = SQLITE.prepare(sql)?.cursor();
+    get_msgs_cursor.bind(bind_values)?;
 
     let mut messages = Vec::new();
-    while let Some(raw_message) = get_all_msgs_cursor.next()? {
+    while let Some(raw_message) = get_msgs_cursor.next()? {
         if raw_message.len() != MESSAGE_FIELDS_COUNT {
             return Err(CorruptedMessage(raw_message.into()));
         }

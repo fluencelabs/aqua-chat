@@ -16,8 +16,7 @@
 
 use crate::message::Message;
 use crate::service_api::AddServiceResult;
-use crate::service_api::GetAllServiceResult;
-use crate::service_api::GetLastServiceResult;
+use crate::service_api::GetMessagesServiceResult;
 use crate::Result;
 
 use fce_sqlite_connector::Error as SqliteConnectorError;
@@ -69,10 +68,10 @@ impl From<std::convert::Infallible> for HistoryError {
 
 fn to_error_core(err: &HistoryError) -> i32 {
     match err {
-        HistoryError::SqliteConnectorError(_) => 1,
-        HistoryError::CorruptedMessage(_) => 2,
-        HistoryError::InternalError(_) => 3,
-        HistoryError::UnexpectedValueType(..) => 4,
+        HistoryError::SqliteConnectorError(_) => 0,
+        HistoryError::CorruptedMessage(_) => 1,
+        HistoryError::InternalError(_) => 2,
+        HistoryError::UnexpectedValueType(..) => 3,
     }
 }
 
@@ -93,7 +92,7 @@ impl From<Result<i64>> for AddServiceResult {
     }
 }
 
-impl From<Result<Vec<Message>>> for GetAllServiceResult {
+impl From<Result<Vec<Message>>> for GetMessagesServiceResult {
     fn from(result: Result<Vec<Message>>) -> Self {
         match result {
             Ok(messages) => Self {
@@ -105,23 +104,6 @@ impl From<Result<Vec<Message>>> for GetAllServiceResult {
                 ret_code: to_error_core(&err),
                 err_msg: format!("{}", err),
                 messages: vec![],
-            },
-        }
-    }
-}
-
-impl From<Result<String>> for GetLastServiceResult {
-    fn from(result: Result<String>) -> Self {
-        match result {
-            Ok(last_message) => Self {
-                ret_code: crate::service_api::SUCCESS_CODE,
-                err_msg: String::new(),
-                last_message,
-            },
-            Err(err) => Self {
-                ret_code: to_error_core(&err),
-                err_msg: format!("{}", err),
-                last_message: String::new(),
             },
         }
     }

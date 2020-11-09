@@ -77,11 +77,11 @@ impl From<std::convert::Infallible> for UserListError {
 
 fn to_error_core(err: &UserListError) -> i32 {
     match err {
-        UserListError::SqliteConnectorError(_) => 1,
-        UserListError::CorruptedUser(_) => 2,
-        UserListError::UnexpectedValueType(..) => 3,
-        UserListError::InvalidSignature(..) => 4,
-        UserListError::UserNotExist(_) => 5,
+        UserListError::SqliteConnectorError(_) => 0,
+        UserListError::CorruptedUser(_) => 1,
+        UserListError::UnexpectedValueType(..) => 2,
+        UserListError::InvalidSignature(..) => 3,
+        UserListError::UserNotExist(_) => 4,
     }
 }
 

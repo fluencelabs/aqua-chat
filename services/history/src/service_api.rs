@@ -30,29 +30,22 @@ pub struct AddServiceResult {
 
 #[fce]
 fn add(author: String, msg: String, reply_to: i64) -> AddServiceResult {
-    add_msg(msg, author, reply_to).into()
+    add_message(msg, author, reply_to).into()
 }
 
 #[fce]
-pub struct GetAllServiceResult {
+pub struct GetMessagesServiceResult {
     pub ret_code: i32,
     pub err_msg: String,
     pub messages: Vec<Message>,
 }
 
 #[fce]
-fn get_all() -> GetAllServiceResult {
-    get_all_msgs().into()
+fn get_all() -> GetMessagesServiceResult {
+    get_all_messages().into()
 }
 
 #[fce]
-pub struct GetLastServiceResult {
-    pub ret_code: i32,
-    pub err_msg: String,
-    pub last_message: String,
-}
-
-#[fce]
-fn get_last(last: i64) -> GetLastServiceResult {
-    get_msg(last).into()
+fn get_last(last: i64) -> GetMessagesServiceResult {
+    get_messages_with_limit(last).into()
 }
