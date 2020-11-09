@@ -1,0 +1,15 @@
+[package]
+name = "services-test"
+version = "0.1.0"
+authors = ["Fluence Labs"]
+edition = "2018"
+
+[[bin]]
+name = "services_test"
+path = "src/main.rs"
+
+[dev-dependencies]
+fluence-app-service = { git = "https://github.com/fluencelabs/fce" }
+uuid = { version = "0.8.1", features = ["v4"] }
+serde = "1.0.117"
+serde_json = "1.0.59"

@@ -14,34 +14,6 @@
  * limitations under the License.
  */
 
-mod storage;
+/// This project is intended only to test services that can't be compiled to the native target.
 
-use fluence::fce;
-use fluence::WasmLogger;
-use crate::storage::{add_msg, init, get_all_msgs, get_msg, Message};
-
-const OWNER: &str = "OWNER";
-
-pub fn main() {
-    WasmLogger::new()
-        .with_log_level(log::Level::Info)
-        .with_target_map(<_>::default())
-        .build()
-        .unwrap();
-    init();
-}
-
-#[fce]
-fn add(author: String, msg: String, reply_to: u32) -> u32 {
-    add_msg(msg, author, reply_to)
-}
-
-#[fce]
-fn get_all() -> Vec<Message> {
-    get_all_msgs()
-}
-
-#[fce]
-fn get_last(last: u64) -> String {
-    get_msg(last)
-}
+pub fn main() {}
