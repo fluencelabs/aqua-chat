@@ -60,7 +60,7 @@ pub fn get_all_users() -> Result<Vec<User>> {
 }
 
 pub fn get_user_by_peer_id(peer_id: String) -> Result<Vec<User>> {
-    let get_user_by_peer_id_sql = "SELECT * FROM users WHERE peer = ?";
+    let get_user_by_peer_id_sql = "SELECT * FROM users WHERE peer_id = ?";
 
     get_users(get_user_by_peer_id_sql, &[VString(peer_id)])
 }

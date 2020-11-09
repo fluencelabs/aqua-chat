@@ -229,18 +229,28 @@ fn get_user_by_peer_id() {
     let result = call_app_service!(
         app_service,
         "join",
-        json!([["peer_id", "relay_id", "signature", "name"]])
+        json!([["peer_id_1", "relay_id_1", "signature_1", "name_1"]])
     );
     assert_eq!(result, json!({ "ret_code": 0, "err_msg": ""}));
 
-    let result = call_app_service!(app_service, "get_user", json!(["peer_id"]));
+    let result = call_app_service!(
+        app_service,
+        "join",
+        json!([["peer_id_2", "relay_id_2", "signature_2", "name_2"]])
+    );
+    assert_eq!(result, json!({ "ret_code": 0, "err_msg": ""}));
+
+    let result = call_app_service!(app_service, "get_user", json!(["peer_id_1"]));
     assert_eq!(
         result,
         json!({ "ret_code": 0, "err_msg": "", "users": [ {
-        "peer_id": "peer_id",
-        "relay_id": "relay_id_changed",
-        "signature": "signature_changed",
-        "name": "name_changed"
+        "peer_id": "peer_id_1",
+        "relay_id": "relay_id_1",
+        "signature": "signature_1",
+        "name": "name_1"
         }]})
     );
+
+    let result = call_app_service!(app_service, "get_user", json!(["peer_id_3"]));
+    assert_eq!(result, json!({ "ret_code": 0, "err_msg": "", "users": [] }));
 }
