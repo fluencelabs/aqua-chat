@@ -46,26 +46,6 @@ fn join(user: User) -> EmptyServiceResult {
 }
 
 #[fce]
-fn change_name(user_name: String, new_user_name: String, signature: String) -> EmptyServiceResult {
-    fn change_name_impl(user_name: String, new_user_name: String, signature: String) -> Result<()> {
-        is_authenticated(user_name.clone(), &signature, None)?;
-        update_name(user_name, new_user_name)
-    };
-
-    change_name_impl(user_name, new_user_name, signature).into()
-}
-
-#[fce]
-fn change_relay(user_name: String, relay: String, signature: String) -> EmptyServiceResult {
-    fn change_relay_impl(user_name: String, relay: String, signature: String) -> Result<()> {
-        is_authenticated(user_name.clone(), &signature, None)?;
-        update_relay(user_name, relay, signature)
-    };
-
-    change_relay_impl(user_name, relay, signature).into()
-}
-
-#[fce]
 fn delete(peer_id: String, signature: String) -> EmptyServiceResult {
     fn delete_impl(peer_id: String, signature: String) -> Result<()> {
         let owner = std::env::var(OWNER).unwrap_or_else(|_| "".to_string());

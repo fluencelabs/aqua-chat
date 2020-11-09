@@ -53,20 +53,6 @@ pub fn user_exists(peer_id: String) -> Result<bool> {
     Ok(user.is_some())
 }
 
-pub fn update_name(name: String, peer_id: String) -> Result<()> {
-    let update_name_sql = "UPDATE users SET name = ? WHERE peer_id = ?";
-    non_return_sql!(SQLITE, update_name_sql, &[VString(name), VString(peer_id)])
-}
-
-pub fn update_relay(peer_id: String, relay: String, signature: String) -> Result<()> {
-    let update_relay_sql = "UPDATE users SET relay = ?, sig = ? WHERE peer_id = ?";
-    non_return_sql!(
-        SQLITE,
-        update_relay_sql,
-        &[VString(relay), VString(signature), VString(peer_id)]
-    )
-}
-
 pub fn get_all_users() -> Result<Vec<User>> {
     use crate::errors::UserListError::CorruptedUser;
     use crate::user::USER_FIELDS_COUNT;

@@ -65,7 +65,8 @@ fn add_delete_users() {
     assert_eq!(result, json!({ "ret_code": 0, "err_msg": "" }));
 
     let result = call_app_service!(app_service, "get_users", json!([]));
-    let get_users_result: GetUsersServiceResult = serde_json::from_value(result).expect("success deserialization");
+    let get_users_result: GetUsersServiceResult =
+        serde_json::from_value(result).expect("success deserialization");
     assert_eq!(get_users_result.ret_code, 0);
     assert!(get_users_result.users.is_empty());
 }
@@ -92,7 +93,8 @@ fn add_delete_many_users() {
     }
 
     let result = call_app_service!(app_service, "get_users", json!([]));
-    let get_users_result: GetUsersServiceResult = serde_json::from_value(result).expect("success deserialization");
+    let get_users_result: GetUsersServiceResult =
+        serde_json::from_value(result).expect("success deserialization");
     assert_eq!(get_users_result.ret_code, 0);
     assert_eq!(get_users_result.users, users);
 
@@ -103,7 +105,84 @@ fn add_delete_many_users() {
     }
 
     let result = call_app_service!(app_service, "get_users", json!([]));
-    let get_users_result: GetUsersServiceResult = serde_json::from_value(result).expect("success deserialization");
+    let get_users_result: GetUsersServiceResult =
+        serde_json::from_value(result).expect("success deserialization");
     assert_eq!(get_users_result.ret_code, 0);
     assert!(get_users_result.users.is_empty());
+}
+
+#[test]
+fn is_exists() {
+    let mut app_service = create_app_service(TEST_CONFIG_PATH);
+
+    let peer_id = String::from("peer_id");
+    let result = call_app_service!(app_service, "is_exists", json!([peer_id]));
+    assert_eq!(
+        result,
+        json!({ "ret_code": 0, "err_msg": "", "is_exists": 0 })
+    );
+
+    let user = User {
+        peer_id: peer_id.clone(),
+        relay_id: String::from("relay_id"),
+        signature: String::from("signature"),
+        name: String::from("name"),
+    };
+    let user = serde_json::to_value(user).expect("success serialization");
+
+    let result = call_app_service!(app_service, "join", json!([user]));
+    assert_eq!(result, json!({ "ret_code": 0, "err_msg": ""}));
+
+    let result = call_app_service!(app_service, "is_exists", json!([peer_id]));
+    assert_eq!(
+        result,
+        json!({ "ret_code": 0, "err_msg": "", "is_exists": 1 })
+    );
+
+    let result = call_app_service!(app_service, "delete", json!(["peer_id", ""]));
+    assert_eq!(result, json!({ "ret_code": 0, "err_msg": "" }));
+
+    let result = call_app_service!(app_service, "is_exists", json!([peer_id]));
+    assert_eq!(
+        result,
+        json!({ "ret_code": 0, "err_msg": "", "is_exists": 0 })
+    );
+}
+
+#[test]
+fn unicode_symbols() {
+    let mut app_service = create_app_service(TEST_CONFIG_PATH);
+
+    let peer_id = String::from("русский");
+    let user = User {
+        peer_id: peer_id.clone(),
+        relay_id: String::from("µµµµ"),
+        signature: String::from("'';;asd;;'`~```||||\\\\"),
+        name: String::from("adasd"),
+    };
+    let user = serde_json::to_value(user).expect("valid serialization");
+
+    let result = call_app_service!(app_service, "join", json!([user]));
+    assert_eq!(result, json!({ "ret_code": 0, "err_msg": ""}));
+
+    let result = call_app_service!(app_service, "is_exists", json!([peer_id]));
+    assert_eq!(
+        result,
+        json!({ "ret_code": 0, "err_msg": "", "is_exists": 1 })
+    );
+
+    let result = call_app_service!(app_service, "get_users", json!([]));
+    assert_eq!(
+        result,
+        json!({ "ret_code": 0, "err_msg": "", "users": [ user ]})
+    );
+
+    let result = call_app_service!(app_service, "delete", json!([peer_id, ""]));
+    assert_eq!(result, json!({ "ret_code": 0, "err_msg": "" }));
+
+    let result = call_app_service!(app_service, "is_exists", json!([peer_id]));
+    assert_eq!(
+        result,
+        json!({ "ret_code": 0, "err_msg": "", "is_exists": 0 })
+    );
 }
