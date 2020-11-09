@@ -1,6 +1,6 @@
 version: 2.1
 jobs:
-  fce:
+  services:
     docker:
       - image: circleci/rust:latest
     environment:
@@ -42,6 +42,6 @@ jobs:
 
 workflows:
   version: 2.1
-  fce:
+  services:
     jobs:
       - services
