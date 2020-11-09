@@ -201,11 +201,39 @@ fn update_user_info() {
     let result = call_app_service!(
         app_service,
         "join",
-        json!([["peer_id", "relay_id_changed", "signature_changed", "name_changed"]])
+        json!([[
+            "peer_id",
+            "relay_id_changed",
+            "signature_changed",
+            "name_changed"
+        ]])
     );
     assert_eq!(result, json!({ "ret_code": 0, "err_msg": ""}));
 
     let result = call_app_service!(app_service, "get_users", json!([]));
+    assert_eq!(
+        result,
+        json!({ "ret_code": 0, "err_msg": "", "users": [ {
+        "peer_id": "peer_id",
+        "relay_id": "relay_id_changed",
+        "signature": "signature_changed",
+        "name": "name_changed"
+        }]})
+    );
+}
+
+#[test]
+fn get_user_by_peer_id() {
+    let mut app_service = create_app_service(TEST_CONFIG_PATH);
+
+    let result = call_app_service!(
+        app_service,
+        "join",
+        json!([["peer_id", "relay_id", "signature", "name"]])
+    );
+    assert_eq!(result, json!({ "ret_code": 0, "err_msg": ""}));
+
+    let result = call_app_service!(app_service, "get_user", json!(["peer_id"]));
     assert_eq!(
         result,
         json!({ "ret_code": 0, "err_msg": "", "users": [ {

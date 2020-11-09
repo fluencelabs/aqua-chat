@@ -54,6 +54,18 @@ pub fn user_exists(peer_id: String) -> Result<bool> {
 }
 
 pub fn get_all_users() -> Result<Vec<User>> {
+    let get_all_users_sql = "SELECT * FROM users";
+
+    get_users(get_all_users_sql, &[])
+}
+
+pub fn get_user_by_peer_id(peer_id: String) -> Result<Vec<User>> {
+    let get_user_by_peer_id_sql = "SELECT * FROM users WHERE peer = ?";
+
+    get_users(get_user_by_peer_id_sql, &[VString(peer_id)])
+}
+
+fn get_users(sql: &str, bind_values: &[Value]) -> Result<Vec<User>> {
     use crate::errors::UserListError::CorruptedUser;
     use crate::user::USER_FIELDS_COUNT;
 
@@ -66,11 +78,11 @@ pub fn get_all_users() -> Result<Vec<User>> {
             .map(Into::into)
     }
 
-    let get_all_users_sql = "SELECT * FROM users";
-    let mut get_all_users_cursor = SQLITE.prepare(get_all_users_sql)?.cursor();
+    let mut get_users_cursor = SQLITE.prepare(sql)?.cursor();
+    get_users_cursor.bind(bind_values)?;
 
     let mut users = Vec::new();
-    while let Some(raw_user) = get_all_users_cursor.next()? {
+    while let Some(raw_user) = get_users_cursor.next()? {
         if raw_user.len() != USER_FIELDS_COUNT {
             return Err(CorruptedUser(raw_user.into()));
         }

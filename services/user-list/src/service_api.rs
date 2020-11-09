@@ -35,6 +35,11 @@ fn get_users() -> GetUsersServiceResult {
 }
 
 #[fce]
+fn get_user(peer_id: String) -> GetUsersServiceResult {
+    get_user_by_peer_id(peer_id).into()
+}
+
+#[fce]
 pub struct EmptyServiceResult {
     pub ret_code: i32,
     pub err_msg: String,
