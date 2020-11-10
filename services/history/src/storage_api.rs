@@ -75,9 +75,15 @@ pub fn add_message(msg: String, author: String, reply_to: i64) -> Result<i64> {
 }
 
 pub fn get_messages_with_limit(limit: i64) -> Result<Vec<Message>> {
-    let get_message_sql = "SELECT * FROM history ORDER BY msg_id DESC LIMIT ?";
+    let get_messages_with_limit_sql = "SELECT * FROM history ORDER BY msg_id DESC LIMIT ?";
 
-    get_messages(get_message_sql, &[VInteger(limit)])
+    get_messages(get_messages_with_limit_sql, &[VInteger(limit)])
+}
+
+pub fn get_messages_by_reply_to(reply_to: i64) -> Result<Vec<Message>> {
+    let get_messages_by_reply_to_sql = "SELECT * FROM history WHERE reply_to = ?";
+
+    get_messages(get_messages_by_reply_to_sql, &[VInteger(reply_to)])
 }
 
 pub fn get_all_messages() -> Result<Vec<Message>> {

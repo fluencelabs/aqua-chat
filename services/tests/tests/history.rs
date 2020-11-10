@@ -105,3 +105,40 @@ fn get_last() {
         }
     );
 }
+
+#[test]
+fn get_by_reply_to() {
+    let mut app_service = create_app_service(TEST_CONFIG_PATH);
+
+    let result = call_app_service!(app_service, "add", json!(["author_1", "body_1", 1]));
+    assert_eq!(result, json!({ "ret_code": 0, "err_msg": "", "msg_id": 1 }));
+
+    let result = call_app_service!(app_service, "add", json!(["author_2", "body_2", 1]));
+    assert_eq!(result, json!({ "ret_code": 0, "err_msg": "", "msg_id": 2 }));
+
+    let result = call_app_service!(app_service, "add", json!(["author_3", "body_3", 2]));
+    assert_eq!(result, json!({ "ret_code": 0, "err_msg": "", "msg_id": 3 }));
+
+    let result = call_app_service!(app_service, "get_by_reply_to", json!([1]));
+    let result: GetMessagesServiceResult =
+        serde_json::from_value(result).expect("valid deserialization");
+
+    assert_eq!(result.ret_code, 0);
+    assert_eq!(
+        result.messages,
+        vec![
+            Message {
+                id: 1,
+                author: String::from("author_1"),
+                body: String::from("body_1"),
+                reply_to: 1,
+            },
+            Message {
+                id: 2,
+                author: String::from("author_2"),
+                body: String::from("body_2"),
+                reply_to: 1,
+            },
+        ]
+    );
+}

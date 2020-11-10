@@ -49,3 +49,8 @@ fn get_all() -> GetMessagesServiceResult {
 fn get_last(last: i64) -> GetMessagesServiceResult {
     get_messages_with_limit(last).into()
 }
+
+#[fce]
+fn get_by_reply_to(reply_to: i64) -> GetMessagesServiceResult {
+    get_messages_by_reply_to(reply_to).into()
+}
