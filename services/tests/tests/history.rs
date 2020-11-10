@@ -39,6 +39,13 @@ pub struct GetMessagesServiceResult {
     pub messages: Vec<Message>,
 }
 
+#[derive(Clone, Debug, Default, Eq, PartialEq, Hash, Serialize, Deserialize)]
+pub struct CountServiceResult {
+    pub ret_code: i32,
+    pub err_msg: String,
+    pub messages_count: u64,
+}
+
 #[test]
 fn get_all() {
     let mut app_service = create_app_service(TEST_CONFIG_PATH);
@@ -141,4 +148,24 @@ fn get_by_reply_to() {
             },
         ]
     );
+}
+
+#[test]
+fn count_by_reply_to() {
+    let mut app_service = create_app_service(TEST_CONFIG_PATH);
+
+    let result = call_app_service!(app_service, "add", json!(["author_1", "body_1", 1]));
+    assert_eq!(result, json!({ "ret_code": 0, "err_msg": "", "msg_id": 1 }));
+
+    let result = call_app_service!(app_service, "add", json!(["author_2", "body_2", 1]));
+    assert_eq!(result, json!({ "ret_code": 0, "err_msg": "", "msg_id": 2 }));
+
+    let result = call_app_service!(app_service, "add", json!(["author_3", "body_3", 2]));
+    assert_eq!(result, json!({ "ret_code": 0, "err_msg": "", "msg_id": 3 }));
+
+    let result = call_app_service!(app_service, "count_by_reply_to", json!([1]));
+    let result: CountServiceResult = serde_json::from_value(result).expect("valid deserialization");
+
+    assert_eq!(result.ret_code, 0);
+    assert_eq!(result.messages_count, 2);
 }

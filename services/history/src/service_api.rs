@@ -25,7 +25,7 @@ pub const SUCCESS_CODE: i32 = 0;
 pub struct AddServiceResult {
     pub ret_code: i32,
     pub err_msg: String,
-    pub msg_id: i64,
+    pub msg_id: u64,
 }
 
 #[fce]
@@ -46,11 +46,23 @@ fn get_all() -> GetMessagesServiceResult {
 }
 
 #[fce]
-fn get_last(last: i64) -> GetMessagesServiceResult {
+fn get_last(last: u64) -> GetMessagesServiceResult {
     get_messages_with_limit(last).into()
 }
 
 #[fce]
-fn get_by_reply_to(reply_to: i64) -> GetMessagesServiceResult {
+fn get_by_reply_to(reply_to: u64) -> GetMessagesServiceResult {
     get_messages_by_reply_to(reply_to).into()
+}
+
+#[fce]
+pub struct CountServiceResult {
+    pub ret_code: i32,
+    pub err_msg: String,
+    pub messages_count: u64,
+}
+
+#[fce]
+fn count_by_reply_to(reply_to: u64) -> CountServiceResult {
+    count_messages_by_reply_to(reply_to).into()
 }

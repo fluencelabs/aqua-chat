@@ -16,6 +16,7 @@
 
 use crate::message::Message;
 use crate::service_api::AddServiceResult;
+use crate::service_api::CountServiceResult;
 use crate::service_api::GetMessagesServiceResult;
 use crate::Result;
 
@@ -30,6 +31,7 @@ pub enum HistoryError {
     SqliteConnectorError(SqliteConnectorError),
     CorruptedMessage(Vec<Value>),
     InternalError(String),
+    InvalidArgument(String),
     UnexpectedValueType(Value, &'static str),
 }
 
@@ -45,6 +47,7 @@ impl std::fmt::Display for HistoryError {
                 values
             ),
             Self::InternalError(err_msg) => writeln!(f, "{}", err_msg),
+            Self::InvalidArgument(err_msg) => writeln!(f, "{}", err_msg),
             Self::UnexpectedValueType(value, expected_type) => writeln!(
                 f,
                 "expected type {}, but value {:?} received",
@@ -71,7 +74,8 @@ fn to_error_core(err: &HistoryError) -> i32 {
         HistoryError::SqliteConnectorError(_) => 0,
         HistoryError::CorruptedMessage(_) => 1,
         HistoryError::InternalError(_) => 2,
-        HistoryError::UnexpectedValueType(..) => 3,
+        HistoryError::InvalidArgument(_) => 3,
+        HistoryError::UnexpectedValueType(..) => 4,
     }
 }
 
@@ -81,12 +85,12 @@ impl From<Result<i64>> for AddServiceResult {
             Ok(msg_id) => Self {
                 ret_code: crate::service_api::SUCCESS_CODE,
                 err_msg: String::new(),
-                msg_id,
+                msg_id: msg_id as u64,
             },
             Err(err) => Self {
                 ret_code: to_error_core(&err),
                 err_msg: format!("{}", err),
-                msg_id: -1,
+                msg_id: u64::max_value(),
             },
         }
     }
@@ -104,6 +108,23 @@ impl From<Result<Vec<Message>>> for GetMessagesServiceResult {
                 ret_code: to_error_core(&err),
                 err_msg: format!("{}", err),
                 messages: vec![],
+            },
+        }
+    }
+}
+
+impl From<Result<i64>> for CountServiceResult {
+    fn from(result: Result<i64>) -> Self {
+        match result {
+            Ok(messages_count) => Self {
+                ret_code: crate::service_api::SUCCESS_CODE,
+                err_msg: String::new(),
+                messages_count: messages_count as u64,
+            },
+            Err(err) => Self {
+                ret_code: to_error_core(&err),
+                err_msg: format!("{}", err),
+                messages_count: 0,
             },
         }
     }
